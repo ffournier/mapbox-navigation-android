@@ -47,6 +47,19 @@ package com.mapbox.navigation.ui.base.api.tripprogress {
 
 }
 
+package com.mapbox.navigation.ui.base.api.voice {
+
+  public interface VoiceApi {
+    method public void cancel();
+    method public void retrieveVoiceFile(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.VoiceCallback callback);
+  }
+
+  public interface VoiceCallback {
+    method public void onVoice(com.mapbox.navigation.ui.base.model.voice.VoiceState.VoiceFile instructionFile);
+  }
+
+}
+
 package com.mapbox.navigation.ui.base.formatter {
 
   public interface ValueFormatter<T, R> {
@@ -187,6 +200,41 @@ package com.mapbox.navigation.ui.base.model.tripprogress {
     method public com.mapbox.navigation.ui.base.model.tripprogress.TripProgressUpdateFormatter.Builder estimatedTimeToArrivalFormatter(com.mapbox.navigation.ui.base.formatter.ValueFormatter<com.mapbox.navigation.ui.base.model.tripprogress.TripProgressUpdate,android.text.SpannableString> formatter);
     method public com.mapbox.navigation.ui.base.model.tripprogress.TripProgressUpdateFormatter.Builder percentRouteTraveledFormatter(com.mapbox.navigation.ui.base.formatter.ValueFormatter<com.mapbox.navigation.ui.base.model.tripprogress.TripProgressUpdate,android.text.SpannableString> formatter);
     method public com.mapbox.navigation.ui.base.model.tripprogress.TripProgressUpdateFormatter.Builder timeRemainingFormatter(com.mapbox.navigation.ui.base.formatter.ValueFormatter<com.mapbox.navigation.ui.base.model.tripprogress.TripProgressUpdate,android.text.SpannableString> formatter);
+  }
+
+}
+
+package com.mapbox.navigation.ui.base.model.voice {
+
+  public abstract sealed class VoiceState implements com.mapbox.navigation.ui.base.MapboxState {
+  }
+
+  public abstract static sealed class VoiceState.VoiceFailure extends com.mapbox.navigation.ui.base.model.voice.VoiceState {
+  }
+
+  public static final class VoiceState.VoiceFailure.VoiceError extends com.mapbox.navigation.ui.base.model.voice.VoiceState.VoiceFailure {
+    ctor public VoiceState.VoiceFailure.VoiceError(String? exception);
+    method public String? component1();
+    method public com.mapbox.navigation.ui.base.model.voice.VoiceState.VoiceFailure.VoiceError copy(String? exception);
+    method public String? getException();
+  }
+
+  public static final class VoiceState.VoiceFile extends com.mapbox.navigation.ui.base.model.voice.VoiceState {
+    ctor public VoiceState.VoiceFile(java.io.File instructionFile);
+    method public java.io.File component1();
+    method public com.mapbox.navigation.ui.base.model.voice.VoiceState.VoiceFile copy(java.io.File instructionFile);
+    method public java.io.File getInstructionFile();
+    method public void setInstructionFile(java.io.File p);
+  }
+
+  public abstract static sealed class VoiceState.VoiceSideEffects extends com.mapbox.navigation.ui.base.model.voice.VoiceState {
+  }
+
+  public static final class VoiceState.VoiceSideEffects.UpdateMute extends com.mapbox.navigation.ui.base.model.voice.VoiceState.VoiceSideEffects {
+    ctor public VoiceState.VoiceSideEffects.UpdateMute(boolean isMuted);
+    method public boolean component1();
+    method public com.mapbox.navigation.ui.base.model.voice.VoiceState.VoiceSideEffects.UpdateMute copy(boolean isMuted);
+    method public boolean isMuted();
   }
 
 }
