@@ -3,6 +3,7 @@ package com.mapbox.navigation.ui.base.model.voice
 import com.mapbox.navigation.ui.base.MapboxState
 import java.io.File
 
+// TODO: Move into libnavui-voice internal
 /**
  * Immutable object representing the voice data to be played.
  */
@@ -12,19 +13,6 @@ sealed class VoiceState : MapboxState {
      * @property instructionFile [File]
      */
     data class VoiceFile(var instructionFile: File) : VoiceState()
-
-    /**
-     * Immutable object defining side effects for voice because of various
-     * other events happening.
-     */
-    sealed class VoiceSideEffects : VoiceState() {
-
-        /**
-         * State determining if voice announcements will be played or not.
-         * @property isMuted Boolean true if should be muted, false if should not
-         */
-        data class UpdateMute(val isMuted: Boolean) : VoiceSideEffects()
-    }
 
     /**
      * The state is returned in case of any errors while preparing the voice instruction
