@@ -30,7 +30,6 @@ internal object VoiceProcessor {
         val request = MapboxSpeech.builder()
             .instruction(instruction.ssmlAnnouncement() ?: "")
             .textType(SSML_TEXT_TYPE)
-            .build()
         return VoiceResult.VoiceRequest(request)
     }
 

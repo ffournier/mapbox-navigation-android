@@ -5,7 +5,7 @@ import okhttp3.ResponseBody
 
 internal sealed class VoiceResult {
     data class VoiceRequest(
-        val request: MapboxSpeech
+        val request: MapboxSpeech.Builder
     ) : VoiceResult()
 
     sealed class Voice : VoiceResult() {

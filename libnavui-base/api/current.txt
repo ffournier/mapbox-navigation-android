@@ -55,6 +55,7 @@ package com.mapbox.navigation.ui.base.api.voice {
   }
 
   public interface VoiceCallback {
+    method public void onFailure(com.mapbox.navigation.ui.base.model.voice.VoiceState.VoiceFailure error);
     method public void onVoice(com.mapbox.navigation.ui.base.model.voice.VoiceState.VoiceFile instructionFile);
   }
 

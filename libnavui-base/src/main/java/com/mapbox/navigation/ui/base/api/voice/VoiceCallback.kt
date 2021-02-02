@@ -12,4 +12,10 @@ interface VoiceCallback {
      * @param instructionFile VoiceFile represents instruction file to be played.
      */
     fun onVoice(instructionFile: VoiceState.VoiceFile)
+
+    /**
+     * Invoked when there is an error retrieving the voice instruction file.
+     * @param error error message.
+     */
+    fun onFailure(error: VoiceState.VoiceFailure)
 }
