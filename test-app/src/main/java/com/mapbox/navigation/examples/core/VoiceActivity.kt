@@ -129,7 +129,7 @@ class VoiceActivity :
             voiceAPI?.retrieveVoiceFile(
                 voiceInstructions,
                 object : VoiceCallback {
-                    override fun onVoice(instructionFile: VoiceState.VoiceFile) {
+                    override fun onVoiceFileReady(instructionFile: VoiceState.VoiceFile) {
                         Log.d(
                             "VoiceActivity",
                             "DEBUG onVoice($instructionFile)"

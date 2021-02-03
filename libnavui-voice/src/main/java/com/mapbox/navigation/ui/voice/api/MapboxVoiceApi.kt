@@ -37,8 +37,7 @@ class MapboxVoiceApi(
      */
     override fun retrieveVoiceFile(voiceInstruction: VoiceInstructions, callback: VoiceCallback) {
         val action = VoiceAction.PrepareVoiceRequest(voiceInstruction)
-        val result = VoiceProcessor.process(action)
-        when (result) {
+        when (val result = VoiceProcessor.process(action)) {
             is VoiceResult.VoiceRequest -> {
                 val mapboxSpeech = result.request
                     .accessToken(accessToken)
@@ -54,7 +53,7 @@ class MapboxVoiceApi(
                             is VoiceResult.Voice.Success -> {
                                 CoroutineScope(Dispatchers.Main).launch {
                                     val voiceFile = generateVoiceFileFrom(res.data)
-                                    callback.onVoice(VoiceState.VoiceFile(voiceFile))
+                                    callback.onVoiceFileReady(VoiceState.VoiceFile(voiceFile))
                                 }
                             }
                             is VoiceResult.Voice.Failure -> {
@@ -85,14 +84,11 @@ class MapboxVoiceApi(
             val cacheDirectory = context.applicationContext.cacheDir
             val instructionsCacheDirectory = File(cacheDirectory, MAPBOX_INSTRUCTIONS_CACHE)
                 .also { it.mkdirs() }
-            val filename = retrieveUniqueId()
-            val file = File(instructionsCacheDirectory, "$filename$MP3_EXTENSION")
-            file.writeBytes(data.bytes())
-            return@withContext file
+            File(instructionsCacheDirectory, "${retrieveUniqueId()}$MP3_EXTENSION")
+                .apply { outputStream().use { data.byteStream().copyTo(it) } }
         }
 
-    private fun retrieveUniqueId(): String =
-        if (++uniqueId > 0) uniqueId.toString() else ""
+    private fun retrieveUniqueId(): String = (++uniqueId).toString()
 
     /**
      * The method stops the process of retrieving the File and destroys any related callbacks.
