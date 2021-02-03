@@ -31,4 +31,12 @@ class MapboxSpeechApi(
     override fun stop(callback: SpeechCallback) {
         speechPlayer.stop(callback)
     }
+
+    /**
+     * Releases the resources used by the speech player.
+     * @param callback SpeechCallback
+     */
+    override fun shutdown(callback: SpeechCallback) {
+        speechPlayer.shutdown(callback)
+    }
 }

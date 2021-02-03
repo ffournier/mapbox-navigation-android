@@ -44,7 +44,9 @@ import com.mapbox.navigation.core.trip.session.MapMatcherResult
 import com.mapbox.navigation.core.trip.session.MapMatcherResultObserver
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
+import com.mapbox.navigation.ui.base.api.voice.SpeechCallback
 import com.mapbox.navigation.ui.base.api.voice.VoiceCallback
+import com.mapbox.navigation.ui.base.model.voice.SpeechState
 import com.mapbox.navigation.ui.base.model.voice.VoiceState
 import com.mapbox.navigation.ui.maps.camera.NavigationCamera
 import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSource
@@ -58,9 +60,12 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLine
+import com.mapbox.navigation.ui.voice.MapboxOnboardSpeechPlayer
+import com.mapbox.navigation.ui.voice.api.MapboxSpeechApi
 import com.mapbox.navigation.ui.voice.api.MapboxVoiceApi
 import com.mapbox.navigation.utils.internal.ifNonNull
-import kotlinx.android.synthetic.main.layout_camera_animations.*
+import kotlinx.android.synthetic.main.layout_camera_animations.mapView
+import kotlinx.android.synthetic.main.layout_voice.*
 import java.util.Locale
 
 class VoiceActivity :
@@ -80,6 +85,7 @@ class VoiceActivity :
     private var routeLineView: MapboxRouteLineView? = null
     private var routeArrowView: MapboxRouteArrowView? = null
     private var voiceAPI: MapboxVoiceApi? = null
+    private var speechAPI: MapboxSpeechApi? = null
 
     private lateinit var navigationCamera: NavigationCamera
     private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
@@ -124,8 +130,22 @@ class VoiceActivity :
         }
     }
 
+    private val speechCallback = object : SpeechCallback {
+        override fun onStateChanged(state: SpeechState) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onFailure(error: SpeechState.SpeechFailure) {
+            TODO("Not yet implemented")
+        }
+    }
+
     private val voiceInstructionsObserver = object : VoiceInstructionsObserver {
         override fun onNewVoiceInstructions(voiceInstructions: VoiceInstructions) {
+            speechAPI?.play(
+                voiceInstructions,
+                speechCallback
+            )
             voiceAPI?.retrieveVoiceFile(
                 voiceInstructions,
                 object : VoiceCallback {
@@ -214,21 +234,28 @@ class VoiceActivity :
         }
     }
 
-    @SuppressLint("MissingPermission")
-    private fun init() {
-        initRouteLine()
-        initStyle()
-        mapboxNavigation.startTripSession()
+    override fun onMapLongClick(point: Point): Boolean {
+        locationComponent?.let { locComp ->
+            val currentLocation = locComp.lastKnownLocation
+            if (currentLocation != null) {
+                val originPoint = Point.fromLngLat(
+                    currentLocation.longitude,
+                    currentLocation.latitude
+                )
+                findRoute(originPoint, point)
+            }
+        }
+        return false
     }
 
-    private fun initRouteLine() {
-        val mapboxRouteLineOptions = MapboxRouteLineOptions.Builder(this).build()
-        routeLineAPI = MapboxRouteLineApi(mapboxRouteLineOptions)
-        routeLineView = MapboxRouteLineView(mapboxRouteLineOptions)
-
-        val routeArrowOptions = RouteArrowOptions.Builder(this).build()
-        routeArrowView = MapboxRouteArrowView(routeArrowOptions)
-        voiceAPI = MapboxVoiceApi(this, getMapboxAccessTokenFromResources(), Locale.US.language)
+    private fun startSimulation(route: DirectionsRoute) {
+        mapboxReplayer.stop()
+        mapboxReplayer.clearEvents()
+        mapboxReplayer.pushRealLocation(this, 0.0)
+        val replayEvents = replayRouteMapper.mapDirectionsRouteGeometry(route)
+        mapboxReplayer.pushEvents(replayEvents)
+        mapboxReplayer.seekTo(replayEvents.first())
+        mapboxReplayer.play()
     }
 
     private fun initNavigation() {
@@ -273,14 +300,35 @@ class VoiceActivity :
         mapboxReplayer.play()
     }
 
-    private fun startSimulation(route: DirectionsRoute) {
-        mapboxReplayer.stop()
-        mapboxReplayer.clearEvents()
-        mapboxReplayer.pushRealLocation(this, 0.0)
-        val replayEvents = replayRouteMapper.mapDirectionsRouteGeometry(route)
-        mapboxReplayer.pushEvents(replayEvents)
-        mapboxReplayer.seekTo(replayEvents.first())
-        mapboxReplayer.play()
+    private fun getMapboxAccessTokenFromResources(): String {
+        return getString(this.resources.getIdentifier("mapbox_access_token", "string", packageName))
+    }
+
+    private fun getGesturesPlugin(): GesturesPlugin {
+        return mapView.getGesturesPlugin()
+    }
+
+    private fun getLocationComponent(): LocationPluginImpl {
+        return mapView.getLocationPlugin()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun init() {
+        initRouteLine()
+        initStyle()
+        initButtons()
+        mapboxNavigation.startTripSession()
+    }
+
+    private fun initRouteLine() {
+        val mapboxRouteLineOptions = MapboxRouteLineOptions.Builder(this).build()
+        routeLineAPI = MapboxRouteLineApi(mapboxRouteLineOptions)
+        routeLineView = MapboxRouteLineView(mapboxRouteLineOptions)
+
+        val routeArrowOptions = RouteArrowOptions.Builder(this).build()
+        routeArrowView = MapboxRouteArrowView(routeArrowOptions)
+        voiceAPI = MapboxVoiceApi(this, getMapboxAccessTokenFromResources(), Locale.US.language)
+        speechAPI = MapboxSpeechApi(MapboxOnboardSpeechPlayer(this, Locale.US.language))
     }
 
     private fun initStyle() {
@@ -305,6 +353,25 @@ class VoiceActivity :
         )
     }
 
+    private fun initializeLocationComponent(style: Style) {
+        locationComponent = getLocationComponent()
+        val activationOptions = LocationComponentActivationOptions.builder(this, style)
+            .useDefaultLocationEngine(false) // SBNOTE: I think this should be false eventually
+            .build()
+        locationComponent?.let {
+            it.activateLocationComponent(activationOptions)
+            it.enabled = true
+            it.renderMode = RenderMode.GPS
+            it.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
+        }
+    }
+
+    private fun initButtons() {
+        stop.setOnClickListener {
+            speechAPI?.stop(speechCallback)
+        }
+    }
+
     private fun findRoute(origin: Point, destination: Point) {
         val routeOptions: RouteOptions = RouteOptions.builder()
             .applyDefaultParams()
@@ -325,20 +392,6 @@ class VoiceActivity :
         mapboxNavigation.requestRoutes(routeOptions)
     }
 
-    override fun onMapLongClick(point: Point): Boolean {
-        locationComponent?.let { locComp ->
-            val currentLocation = locComp.lastKnownLocation
-            if (currentLocation != null) {
-                val originPoint = Point.fromLngLat(
-                    currentLocation.longitude,
-                    currentLocation.latitude
-                )
-                findRoute(originPoint, point)
-            }
-        }
-        return false
-    }
-
     override fun onStart() {
         super.onStart()
         mapView.onStart()
@@ -354,31 +407,7 @@ class VoiceActivity :
         super.onDestroy()
         mapView.onDestroy()
         mapboxNavigation.onDestroy()
-    }
-
-    private fun initializeLocationComponent(style: Style) {
-        locationComponent = getLocationComponent()
-        val activationOptions = LocationComponentActivationOptions.builder(this, style)
-            .useDefaultLocationEngine(false) // SBNOTE: I think this should be false eventually
-            .build()
-        locationComponent?.let {
-            it.activateLocationComponent(activationOptions)
-            it.enabled = true
-            it.renderMode = RenderMode.GPS
-            it.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
-        }
-    }
-
-    private fun getMapboxAccessTokenFromResources(): String {
-        return getString(this.resources.getIdentifier("mapbox_access_token", "string", packageName))
-    }
-
-    private fun getLocationComponent(): LocationPluginImpl {
-        return mapView.getLocationPlugin()
-    }
-
-    private fun getGesturesPlugin(): GesturesPlugin {
-        return mapView.getGesturesPlugin()
+        speechAPI?.shutdown(speechCallback)
     }
 
     override fun onRequestPermissionsResult(

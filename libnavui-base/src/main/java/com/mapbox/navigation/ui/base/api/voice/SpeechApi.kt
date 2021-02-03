@@ -25,4 +25,10 @@ interface SpeechApi {
      * @param callback SpeechCallback
      */
     fun stop(callback: SpeechCallback)
+
+    /**
+     * Releases the resources used by the speech player.
+     * @param callback SpeechCallback
+     */
+    fun shutdown(callback: SpeechCallback)
 }

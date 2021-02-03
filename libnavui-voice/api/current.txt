@@ -4,19 +4,23 @@ package com.mapbox.navigation.ui.voice {
   public final class MapboxHybridSpeechPlayer implements com.mapbox.navigation.ui.base.api.voice.SpeechApi {
     ctor public MapboxHybridSpeechPlayer();
     method public void play(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
+    method public void shutdown(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
     method public void stop(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
   }
 
   public final class MapboxOffboardSpeechPlayer implements com.mapbox.navigation.ui.base.api.voice.SpeechApi {
     ctor public MapboxOffboardSpeechPlayer();
     method public void play(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
+    method public void shutdown(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
     method public void stop(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
   }
 
   public final class MapboxOnboardSpeechPlayer implements com.mapbox.navigation.ui.base.api.voice.SpeechApi {
-    ctor public MapboxOnboardSpeechPlayer();
+    ctor public MapboxOnboardSpeechPlayer(android.content.Context context, String language);
     method public void play(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
+    method public void shutdown(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
     method public void stop(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
+    field @Deprecated public static final com.mapbox.navigation.ui.voice.MapboxOnboardSpeechPlayer.Companion! Companion;
   }
 
 }
@@ -26,6 +30,7 @@ package com.mapbox.navigation.ui.voice.api {
   public final class MapboxSpeechApi implements com.mapbox.navigation.ui.base.api.voice.SpeechApi {
     ctor public MapboxSpeechApi(com.mapbox.navigation.ui.base.api.voice.SpeechApi speechPlayer);
     method public void play(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
+    method public void shutdown(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
     method public void stop(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
   }
 

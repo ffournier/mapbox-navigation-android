@@ -29,4 +29,12 @@ class MapboxHybridSpeechPlayer : SpeechApi {
     override fun stop(callback: SpeechCallback) {
         TODO("Not yet implemented")
     }
+
+    /**
+     * Releases the resources used by the speech player.
+     * @param callback SpeechCallback
+     */
+    override fun shutdown(callback: SpeechCallback) {
+        TODO("Not yet implemented")
+    }
 }
