@@ -9,7 +9,7 @@ package com.mapbox.navigation.ui.voice {
   }
 
   public final class MapboxOffboardSpeechPlayer implements com.mapbox.navigation.ui.base.api.voice.SpeechApi {
-    ctor public MapboxOffboardSpeechPlayer();
+    ctor public MapboxOffboardSpeechPlayer(android.content.Context context, String accessToken, String language);
     method public void play(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
     method public void shutdown(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
     method public void stop(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
@@ -21,24 +21,6 @@ package com.mapbox.navigation.ui.voice {
     method public void shutdown(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
     method public void stop(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
     field @Deprecated public static final com.mapbox.navigation.ui.voice.MapboxOnboardSpeechPlayer.Companion! Companion;
-  }
-
-}
-
-package com.mapbox.navigation.ui.voice.api {
-
-  public final class MapboxSpeechApi implements com.mapbox.navigation.ui.base.api.voice.SpeechApi {
-    ctor public MapboxSpeechApi(com.mapbox.navigation.ui.base.api.voice.SpeechApi speechPlayer);
-    method public void play(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
-    method public void shutdown(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
-    method public void stop(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
-  }
-
-  public final class MapboxVoiceApi implements com.mapbox.navigation.ui.base.api.voice.VoiceApi {
-    ctor public MapboxVoiceApi(android.content.Context context, String accessToken, String language);
-    method public void cancel();
-    method public void retrieveVoiceFile(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.VoiceCallback callback);
-    field @Deprecated public static final com.mapbox.navigation.ui.voice.api.MapboxVoiceApi.Companion! Companion;
   }
 
 }

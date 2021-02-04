@@ -44,10 +44,9 @@ import com.mapbox.navigation.core.trip.session.MapMatcherResult
 import com.mapbox.navigation.core.trip.session.MapMatcherResultObserver
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
+import com.mapbox.navigation.ui.base.api.voice.SpeechApi
 import com.mapbox.navigation.ui.base.api.voice.SpeechCallback
-import com.mapbox.navigation.ui.base.api.voice.VoiceCallback
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
-import com.mapbox.navigation.ui.base.model.voice.VoiceState
 import com.mapbox.navigation.ui.maps.camera.NavigationCamera
 import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSource
 import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSourceOptions
@@ -60,9 +59,7 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLine
-import com.mapbox.navigation.ui.voice.MapboxOnboardSpeechPlayer
-import com.mapbox.navigation.ui.voice.api.MapboxSpeechApi
-import com.mapbox.navigation.ui.voice.api.MapboxVoiceApi
+import com.mapbox.navigation.ui.voice.MapboxOffboardSpeechPlayer
 import com.mapbox.navigation.utils.internal.ifNonNull
 import kotlinx.android.synthetic.main.layout_camera_animations.mapView
 import kotlinx.android.synthetic.main.layout_voice.*
@@ -84,8 +81,7 @@ class VoiceActivity :
     private val routeArrowAPI: MapboxRouteArrowApi = MapboxRouteArrowApi()
     private var routeLineView: MapboxRouteLineView? = null
     private var routeArrowView: MapboxRouteArrowView? = null
-    private var voiceAPI: MapboxVoiceApi? = null
-    private var speechAPI: MapboxSpeechApi? = null
+    private var speechAPI: SpeechApi? = null
 
     private lateinit var navigationCamera: NavigationCamera
     private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
@@ -131,11 +127,15 @@ class VoiceActivity :
     }
 
     private val speechCallback = object : SpeechCallback {
-        override fun onStateChanged(state: SpeechState) {
+        override fun onPlaying(state: SpeechState.Speech.Playing) {
             TODO("Not yet implemented")
         }
 
-        override fun onFailure(error: SpeechState.SpeechFailure) {
+        override fun onStopped(state: SpeechState.Speech.Stopped) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onError(error: SpeechState.Speech.Error) {
             TODO("Not yet implemented")
         }
     }
@@ -145,24 +145,6 @@ class VoiceActivity :
             speechAPI?.play(
                 voiceInstructions,
                 speechCallback
-            )
-            voiceAPI?.retrieveVoiceFile(
-                voiceInstructions,
-                object : VoiceCallback {
-                    override fun onVoiceFileReady(instructionFile: VoiceState.VoiceFile) {
-                        Log.d(
-                            "VoiceActivity",
-                            "DEBUG onVoice($instructionFile)"
-                        )
-                    }
-
-                    override fun onFailure(error: VoiceState.VoiceFailure) {
-                        Log.d(
-                            "VoiceActivity",
-                            "DEBUG onFailure(error: $error)"
-                        )
-                    }
-                }
             )
         }
     }
@@ -327,8 +309,11 @@ class VoiceActivity :
 
         val routeArrowOptions = RouteArrowOptions.Builder(this).build()
         routeArrowView = MapboxRouteArrowView(routeArrowOptions)
-        voiceAPI = MapboxVoiceApi(this, getMapboxAccessTokenFromResources(), Locale.US.language)
-        speechAPI = MapboxSpeechApi(MapboxOnboardSpeechPlayer(this, Locale.US.language))
+        speechAPI = MapboxOffboardSpeechPlayer(
+            this,
+            getMapboxAccessTokenFromResources(),
+            Locale.US.language
+        )
     }
 
     private fun initStyle() {

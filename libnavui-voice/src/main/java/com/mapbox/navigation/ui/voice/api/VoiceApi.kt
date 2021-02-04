@@ -1,12 +1,11 @@
-package com.mapbox.navigation.ui.base.api.voice
+package com.mapbox.navigation.ui.voice.api
 
 import com.mapbox.api.directions.v5.models.VoiceInstructions
 
-// TODO: Move into libnavui-voice internal
 /**
  * An Api that allows you to retrieve voice instruction files based on [VoiceInstructions]
  */
-interface VoiceApi {
+internal interface VoiceApi {
 
     /**
      * Given [VoiceInstructions] the method returns a [File] wrapped inside [VoiceCallback]

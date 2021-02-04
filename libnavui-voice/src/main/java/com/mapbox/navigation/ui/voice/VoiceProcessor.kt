@@ -32,7 +32,7 @@ internal object VoiceProcessor {
         return if (response.isSuccessful) {
             response.body()?.let {
                 VoiceResult.Voice.Success(it)
-            } ?: VoiceResult.Voice.Empty("No data available")
+            } ?: VoiceResult.Voice.Empty
         } else {
             VoiceResult.Voice.Failure(response.errorBody()?.string())
         }

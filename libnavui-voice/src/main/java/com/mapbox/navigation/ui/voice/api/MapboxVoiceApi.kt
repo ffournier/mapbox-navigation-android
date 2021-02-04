@@ -2,14 +2,11 @@ package com.mapbox.navigation.ui.voice.api
 
 import android.content.Context
 import com.mapbox.api.directions.v5.models.VoiceInstructions
-import com.mapbox.navigation.ui.base.api.voice.VoiceApi
-import com.mapbox.navigation.ui.base.api.voice.VoiceCallback
-import com.mapbox.navigation.ui.base.model.voice.VoiceState
 import com.mapbox.navigation.ui.voice.VoiceAction
 import com.mapbox.navigation.ui.voice.VoiceProcessor
 import com.mapbox.navigation.ui.voice.VoiceResult
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.mapbox.navigation.ui.voice.model.VoiceState
+import com.mapbox.navigation.utils.internal.ThreadController
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
@@ -24,7 +21,7 @@ import java.io.File
  * @property accessToken String
  * @property language String
  */
-class MapboxVoiceApi(
+internal class MapboxVoiceApi(
     private val context: Context,
     private val accessToken: String,
     private val language: String
@@ -51,27 +48,27 @@ class MapboxVoiceApi(
                         val voiceAction = VoiceAction.ProcessVoiceResponse(response)
                         when (val res = VoiceProcessor.process(voiceAction)) {
                             is VoiceResult.Voice.Success -> {
-                                CoroutineScope(Dispatchers.Main).launch {
+                                ThreadController.getMainScopeAndRootJob().scope.launch {
                                     val voiceFile = generateVoiceFileFrom(res.data)
                                     callback.onVoiceFileReady(VoiceState.VoiceFile(voiceFile))
                                 }
                             }
                             is VoiceResult.Voice.Failure -> {
-                                callback.onFailure(
-                                    VoiceState.VoiceFailure.VoiceError(res.error)
+                                callback.onError(
+                                    VoiceState.VoiceError(res.error)
                                 )
                             }
                             is VoiceResult.Voice.Empty -> {
-                                callback.onFailure(
-                                    VoiceState.VoiceFailure.VoiceError(res.error)
+                                callback.onError(
+                                    VoiceState.VoiceError("No data available")
                                 )
                             }
                         }
                     }
 
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                        callback.onFailure(
-                            VoiceState.VoiceFailure.VoiceError(t.localizedMessage)
+                        callback.onError(
+                            VoiceState.VoiceError(t.localizedMessage)
                         )
                     }
                 })
@@ -80,7 +77,7 @@ class MapboxVoiceApi(
     }
 
     private suspend fun generateVoiceFileFrom(data: ResponseBody): File =
-        withContext(Dispatchers.IO) {
+        withContext(ThreadController.IODispatcher) {
             val cacheDirectory = context.applicationContext.cacheDir
             val instructionsCacheDirectory = File(cacheDirectory, MAPBOX_INSTRUCTIONS_CACHE)
                 .also { it.mkdirs() }

@@ -8,14 +8,20 @@ import com.mapbox.navigation.ui.base.model.voice.SpeechState
 interface SpeechCallback {
 
     /**
-     * Invoked when the voice instruction state changes.
-     * @param state current SpeechState result of SpeechApi interactions.
+     * Invoked when the voice instruction Playing state occurs.
+     * @param state Playing SpeechState.
      */
-    fun onStateChanged(state: SpeechState)
+    fun onPlaying(state: SpeechState.Speech.Playing)
+
+    /**
+     * Invoked when the voice instruction Stopped state occurs.
+     * @param state Stopped SpeechState.
+     */
+    fun onStopped(state: SpeechState.Speech.Stopped)
 
     /**
      * Invoked when there is an error playing the voice instruction.
      * @param error error message.
      */
-    fun onFailure(error: SpeechState.SpeechFailure)
+    fun onError(error: SpeechState.Speech.Error)
 }

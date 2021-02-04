@@ -1,12 +1,11 @@
-package com.mapbox.navigation.ui.base.api.voice
+package com.mapbox.navigation.ui.voice.api
 
-import com.mapbox.navigation.ui.base.model.voice.VoiceState
+import com.mapbox.navigation.ui.voice.model.VoiceState
 
-// TODO: Move into libnavui-voice internal
 /**
  * Interface definition for a callback to be invoked when a [File] is processed.
  */
-interface VoiceCallback {
+internal interface VoiceCallback {
 
     /**
      * Invoked when [File] is ready.
@@ -18,5 +17,5 @@ interface VoiceCallback {
      * Invoked when there is an error retrieving the voice instruction file.
      * @param error error message.
      */
-    fun onFailure(error: VoiceState.VoiceFailure)
+    fun onError(error: VoiceState.VoiceError)
 }

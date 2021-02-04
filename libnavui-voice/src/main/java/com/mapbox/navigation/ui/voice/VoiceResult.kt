@@ -11,6 +11,6 @@ internal sealed class VoiceResult {
     sealed class Voice : VoiceResult() {
         data class Success(val data: ResponseBody) : Voice()
         data class Failure(val error: String?) : Voice()
-        data class Empty(val error: String) : Voice()
+        object Empty : Voice()
     }
 }
