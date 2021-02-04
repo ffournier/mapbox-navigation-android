@@ -3,7 +3,7 @@ package com.mapbox.navigation.ui.maps.snapshotter.view
 import android.content.Context
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatImageView
-import com.mapbox.navigation.ui.base.MapboxView
+import com.mapbox.navigation.ui.base.MapboxStateMachine
 import com.mapbox.navigation.ui.base.model.snapshotter.SnapshotState
 
 /**
@@ -13,7 +13,7 @@ class MapboxSnapshotView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : MapboxView<SnapshotState>, AppCompatImageView(context, attrs, defStyleAttr) {
+) : MapboxStateMachine<SnapshotState>, AppCompatImageView(context, attrs, defStyleAttr) {
 
     /**
      * Initialize method call
@@ -25,7 +25,7 @@ class MapboxSnapshotView @JvmOverloads constructor(
     /**
      * Entry point for the [MapboxSnapshotView] to render itself based on a [SnapshotState].
      */
-    override fun render(state: SnapshotState) {
+    override fun apply(state: SnapshotState) {
         when (state) {
             is SnapshotState.SnapshotReady -> {
                 visibility = VISIBLE

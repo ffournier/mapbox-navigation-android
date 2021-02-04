@@ -11,15 +11,12 @@ sealed class SpeechState : MapboxState {
      * The structure represents different state for a Speech.
      */
     sealed class Speech : SpeechState() {
-        /**
-         * The state is returned if the voice instruction is playing.
-         */
-        object Playing : Speech()
 
         /**
-         * The state is returned if the voice instruction is stopped.
+         * The state is returned when the speech is ready to be played on the UI.
+         * @property announcement
          */
-        object Stopped : Speech()
+        data class Available(val announcement: Announcement) : Speech()
 
         /**
          * The state is returned if there is an error playing the voice instruction
@@ -29,19 +26,17 @@ sealed class SpeechState : MapboxState {
     }
 
     /**
-     * Immutable object defining side effects for voice announcements because of various
-     * other events happening.
+     * The state is returned if the voice instruction is playing.
      */
-    sealed class Volume : SpeechState() {
+    data class Play(val announcement: Announcement) : SpeechState()
 
-        /**
-         *
-         */
-        object Mute : Volume()
+    /**
+     * The state is returned if the voice instruction is stopping.
+     */
+    object Stop : SpeechState()
 
-        /**
-         *
-         */
-        object Unmute : Volume()
-    }
+    /**
+     * The state is returned if the voice instruction is shutting down.
+     */
+    object Shutdown : SpeechState()
 }

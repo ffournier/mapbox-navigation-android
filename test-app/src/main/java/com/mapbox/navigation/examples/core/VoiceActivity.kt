@@ -44,7 +44,6 @@ import com.mapbox.navigation.core.trip.session.MapMatcherResult
 import com.mapbox.navigation.core.trip.session.MapMatcherResultObserver
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
-import com.mapbox.navigation.ui.base.api.voice.SpeechApi
 import com.mapbox.navigation.ui.base.api.voice.SpeechCallback
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
 import com.mapbox.navigation.ui.maps.camera.NavigationCamera
@@ -59,7 +58,8 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLine
-import com.mapbox.navigation.ui.voice.MapboxOffboardSpeechPlayer
+import com.mapbox.navigation.ui.voice.MapboxSpeechPlayer
+import com.mapbox.navigation.ui.voice.api.MapboxOnboardSpeechPlayerApi
 import com.mapbox.navigation.utils.internal.ifNonNull
 import kotlinx.android.synthetic.main.layout_camera_animations.mapView
 import kotlinx.android.synthetic.main.layout_voice.*
@@ -81,7 +81,8 @@ class VoiceActivity :
     private val routeArrowAPI: MapboxRouteArrowApi = MapboxRouteArrowApi()
     private var routeLineView: MapboxRouteLineView? = null
     private var routeArrowView: MapboxRouteArrowView? = null
-    private var speechAPI: SpeechApi? = null
+    private lateinit var speechAPI: MapboxOnboardSpeechPlayerApi
+    private var speechPlayer: MapboxSpeechPlayer? = null
 
     private lateinit var navigationCamera: NavigationCamera
     private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
@@ -127,12 +128,8 @@ class VoiceActivity :
     }
 
     private val speechCallback = object : SpeechCallback {
-        override fun onPlaying(state: SpeechState.Speech.Playing) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onStopped(state: SpeechState.Speech.Stopped) {
-            TODO("Not yet implemented")
+        override fun onAvailable(state: SpeechState.Speech.Available) {
+            speechPlayer?.apply(SpeechState.Play(state.announcement))
         }
 
         override fun onError(error: SpeechState.Speech.Error) {
@@ -142,7 +139,7 @@ class VoiceActivity :
 
     private val voiceInstructionsObserver = object : VoiceInstructionsObserver {
         override fun onNewVoiceInstructions(voiceInstructions: VoiceInstructions) {
-            speechAPI?.play(
+            speechAPI.generate(
                 voiceInstructions,
                 speechCallback
             )
@@ -309,11 +306,11 @@ class VoiceActivity :
 
         val routeArrowOptions = RouteArrowOptions.Builder(this).build()
         routeArrowView = MapboxRouteArrowView(routeArrowOptions)
-        speechAPI = MapboxOffboardSpeechPlayer(
+        speechAPI = MapboxOnboardSpeechPlayerApi(
             this,
-            getMapboxAccessTokenFromResources(),
             Locale.US.language
         )
+        speechPlayer = MapboxSpeechPlayer(speechAPI)
     }
 
     private fun initStyle() {
@@ -353,7 +350,7 @@ class VoiceActivity :
 
     private fun initButtons() {
         stop.setOnClickListener {
-            speechAPI?.stop(speechCallback)
+            speechPlayer?.apply(SpeechState.Stop)
         }
     }
 
@@ -392,7 +389,7 @@ class VoiceActivity :
         super.onDestroy()
         mapView.onDestroy()
         mapboxNavigation.onDestroy()
-        speechAPI?.shutdown(speechCallback)
+        speechPlayer?.apply(SpeechState.Shutdown)
     }
 
     override fun onRequestPermissionsResult(

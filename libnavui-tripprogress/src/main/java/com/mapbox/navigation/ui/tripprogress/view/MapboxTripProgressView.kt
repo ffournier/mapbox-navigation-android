@@ -8,14 +8,14 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import com.mapbox.navigation.ui.base.MapboxView
+import com.mapbox.navigation.ui.base.MapboxStateMachine
 import com.mapbox.navigation.ui.base.model.tripprogress.TripProgressState
 import com.mapbox.navigation.ui.tripprogress.R
 
 /**
  * A view that can be added to activity layouts which displays trip progress.
  */
-class MapboxTripProgressView : FrameLayout, MapboxView<TripProgressState> {
+class MapboxTripProgressView : FrameLayout, MapboxStateMachine<TripProgressState> {
 
     private var viewDistanceRemaining: TextView? = null
     private var viewEstimatedTimeToArrive: TextView? = null
@@ -84,7 +84,7 @@ class MapboxTripProgressView : FrameLayout, MapboxView<TripProgressState> {
      *
      * @param state a [TripProgressState] containing the data that should be rendered.
      */
-    override fun render(state: TripProgressState) {
+    override fun apply(state: TripProgressState) {
         when (state) {
             is TripProgressState.Update -> renderUpdate(state)
         }

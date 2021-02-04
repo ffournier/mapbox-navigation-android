@@ -118,7 +118,7 @@ class MapboxTripProgressViewTest {
         val state = TripProgressState.Update(update, formatter)
 
         val view = MapboxTripProgressView(ctx).also {
-            it.render(state)
+            it.apply(state)
         }
 
         assertEquals(

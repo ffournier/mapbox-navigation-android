@@ -83,11 +83,11 @@ public class MapboxSnapshotActivity extends AppCompatActivity implements OnMapLo
 
   private SnapshotReadyCallback callback = new SnapshotReadyCallback() {
     @Override public void onSnapshotReady(@NotNull SnapshotState.SnapshotReady bitmap) {
-      snapshotView.render(bitmap);
+      snapshotView.apply(bitmap);
     }
 
     @Override public void onFailure(@NotNull SnapshotState.SnapshotFailure error) {
-      snapshotView.render(error);
+      snapshotView.apply(error);
     }
   };
 

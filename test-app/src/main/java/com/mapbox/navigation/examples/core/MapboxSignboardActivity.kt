@@ -71,18 +71,18 @@ class MapboxSignboardActivity : AppCompatActivity(), OnMapLongClickListener {
 
     private val signboardCallback: SignboardReadyCallback = object : SignboardReadyCallback {
         override fun onAvailable(state: SignboardState.Signboard.Available) {
-            signboardView.render(SignboardState.Show)
-            signboardView.render(state)
+            signboardView.apply(SignboardState.Show)
+            signboardView.apply(state)
         }
 
         override fun onUnavailable(state: SignboardState.Signboard.Empty) {
-            signboardView.render(SignboardState.Hide)
-            signboardView.render(state)
+            signboardView.apply(SignboardState.Hide)
+            signboardView.apply(state)
         }
 
         override fun onError(state: SignboardState.Signboard.Error) {
-            signboardView.render(SignboardState.Hide)
-            signboardView.render(state)
+            signboardView.apply(SignboardState.Hide)
+            signboardView.apply(state)
         }
     }
 

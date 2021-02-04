@@ -7,7 +7,7 @@ import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatImageView
 import com.caverock.androidsvg.RenderOptions
 import com.caverock.androidsvg.SVG
-import com.mapbox.navigation.ui.base.MapboxView
+import com.mapbox.navigation.ui.base.MapboxStateMachine
 import com.mapbox.navigation.ui.base.model.signboard.SignboardState
 import java.io.ByteArrayInputStream
 
@@ -18,7 +18,7 @@ class MapboxSignboardView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : MapboxView<SignboardState>, AppCompatImageView(context, attrs, defStyleAttr) {
+) : MapboxStateMachine<SignboardState>, AppCompatImageView(context, attrs, defStyleAttr) {
 
     private companion object {
         /**
@@ -31,7 +31,7 @@ class MapboxSignboardView @JvmOverloads constructor(
     /**
      * Entry point for the [MapboxSignboardView] to render itself based on a [SignboardState].
      */
-    override fun render(state: SignboardState) {
+    override fun apply(state: SignboardState) {
         when (state) {
             is SignboardState.Signboard.Available -> {
                 val signboard = renderSignboard(state)

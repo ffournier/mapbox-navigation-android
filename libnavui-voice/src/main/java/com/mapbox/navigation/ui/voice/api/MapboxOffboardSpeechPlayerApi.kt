@@ -1,12 +1,13 @@
-package com.mapbox.navigation.ui.voice
+package com.mapbox.navigation.ui.voice.api
 
 import android.content.Context
 import android.media.MediaPlayer
 import com.mapbox.api.directions.v5.models.VoiceInstructions
 import com.mapbox.navigation.ui.base.api.voice.SpeechApi
 import com.mapbox.navigation.ui.base.api.voice.SpeechCallback
-import com.mapbox.navigation.ui.voice.api.MapboxVoiceApi
-import com.mapbox.navigation.ui.voice.api.VoiceCallback
+import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
+import com.mapbox.navigation.ui.base.model.voice.Announcement
+import com.mapbox.navigation.ui.base.model.voice.SpeechState
 import com.mapbox.navigation.ui.voice.model.VoiceState
 import java.io.File
 import java.io.FileInputStream
@@ -20,11 +21,11 @@ import java.io.IOException
  * @property accessToken String
  * @property language String
  */
-class MapboxOffboardSpeechPlayer(
+class MapboxOffboardSpeechPlayerApi(
     private val context: Context,
     private val accessToken: String,
     private val language: String
-) : SpeechApi {
+) : SpeechApi, SpeechPlayer {
 
     private var mediaPlayer = MediaPlayer()
     private val voiceAPI = MapboxVoiceApi(context, accessToken, language)
@@ -37,12 +38,27 @@ class MapboxOffboardSpeechPlayer(
      * @param voiceInstruction VoiceInstructions object representing [VoiceInstructions]
      * @param callback SpeechCallback
      */
-    override fun play(voiceInstruction: VoiceInstructions, callback: SpeechCallback) {
+    override fun generate(voiceInstruction: VoiceInstructions, callback: SpeechCallback) {
         voiceAPI.retrieveVoiceFile(
             voiceInstruction,
             object : VoiceCallback {
                 override fun onVoiceFileReady(instructionFile: VoiceState.VoiceFile) {
-                    setupMediaPlayer(instructionFile.instructionFile)
+                    val announcement = voiceInstruction.ssmlAnnouncement()
+                    val isValidAnnouncement = !announcement.isNullOrBlank()
+
+                    if (isValidAnnouncement) {
+                        callback.onAvailable(
+                            SpeechState.Speech.Available(
+                                Announcement(announcement!!, instructionFile.instructionFile)
+                            )
+                        )
+                    } else {
+                        callback.onError(
+                            SpeechState.Speech.Error(
+                                "VoiceInstructions#ssmlAnnouncement can't be null"
+                            )
+                        )
+                    }
                 }
 
                 override fun onError(error: VoiceState.VoiceError) {
@@ -53,19 +69,30 @@ class MapboxOffboardSpeechPlayer(
     }
 
     /**
+     * Given [Announcement] the method will play the voice instruction.
+     * If a voice instruction is already playing or other announcement are already queued,
+     * the given voice instruction will be queued to play after.
+     * @param announcement Announcement object including the announcement text and optionally
+     * a synthesized speech mp3.
+     */
+    override fun play(announcement: Announcement) {
+        announcement.file?.let {
+            setupMediaPlayer(it)
+        }
+    }
+
+    /**
      * If called while an announcement is currently playing,
      * the announcement should end immediately and any announcements queued should be cleared.
-     * @param callback SpeechCallback
      */
-    override fun stop(callback: SpeechCallback) {
+    override fun stop() {
         stopMediaPlayer()
     }
 
     /**
      * Releases the resources used by the speech player.
-     * @param callback SpeechCallback
      */
-    override fun shutdown(callback: SpeechCallback) {
+    override fun shutdown() {
         stopMediaPlayer()
     }
 

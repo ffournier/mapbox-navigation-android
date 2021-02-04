@@ -29,7 +29,7 @@ class MapboxSignboardViewTest {
         val signboardState = SignboardState.Signboard.Empty
         val expected = null
 
-        view.render(signboardState)
+        view.apply(signboardState)
 
         assertEquals(expected, Shadows.shadowOf((view.drawable as BitmapDrawable)).source)
     }
@@ -40,7 +40,7 @@ class MapboxSignboardViewTest {
         val signboardState = SignboardState.Signboard.Error("")
         val expected = null
 
-        view.render(signboardState)
+        view.apply(signboardState)
 
         assertEquals(expected, Shadows.shadowOf((view.drawable as BitmapDrawable)).source)
     }
@@ -51,7 +51,7 @@ class MapboxSignboardViewTest {
         val signboardState = SignboardState.Hide
         val expected = GONE
 
-        view.render(signboardState)
+        view.apply(signboardState)
 
         assertEquals(expected, view.visibility)
     }
@@ -62,7 +62,7 @@ class MapboxSignboardViewTest {
         val signboardState = SignboardState.Show
         val expected = VISIBLE
 
-        view.render(signboardState)
+        view.apply(signboardState)
 
         assertEquals(expected, view.visibility)
     }

@@ -4,8 +4,8 @@ package com.mapbox.navigation.ui.base {
   public interface MapboxState {
   }
 
-  public interface MapboxView<S extends com.mapbox.navigation.ui.base.MapboxState> {
-    method public void render(S state);
+  public interface MapboxStateMachine<S extends com.mapbox.navigation.ui.base.MapboxState> {
+    method public void apply(S state);
   }
 
 }
@@ -50,15 +50,18 @@ package com.mapbox.navigation.ui.base.api.tripprogress {
 package com.mapbox.navigation.ui.base.api.voice {
 
   public interface SpeechApi {
-    method public void play(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
-    method public void shutdown(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
-    method public void stop(com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
+    method public void generate(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
   }
 
   public interface SpeechCallback {
+    method public void onAvailable(com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech.Available state);
     method public void onError(com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech.Error error);
-    method public void onPlaying(com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech.Playing state);
-    method public void onStopped(com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech.Stopped state);
+  }
+
+  public interface SpeechPlayer {
+    method public void play(com.mapbox.navigation.ui.base.model.voice.Announcement announcement);
+    method public void shutdown();
+    method public void stop();
   }
 
 }
@@ -209,10 +212,37 @@ package com.mapbox.navigation.ui.base.model.tripprogress {
 
 package com.mapbox.navigation.ui.base.model.voice {
 
+  public final class Announcement {
+    ctor public Announcement(String announcement, java.io.File? file);
+    method public String component1();
+    method public java.io.File? component2();
+    method public com.mapbox.navigation.ui.base.model.voice.Announcement copy(String announcement, java.io.File? file);
+    method public String getAnnouncement();
+    method public java.io.File? getFile();
+  }
+
   public abstract sealed class SpeechState implements com.mapbox.navigation.ui.base.MapboxState {
   }
 
+  public static final class SpeechState.Play extends com.mapbox.navigation.ui.base.model.voice.SpeechState {
+    ctor public SpeechState.Play(com.mapbox.navigation.ui.base.model.voice.Announcement announcement);
+    method public com.mapbox.navigation.ui.base.model.voice.Announcement component1();
+    method public com.mapbox.navigation.ui.base.model.voice.SpeechState.Play copy(com.mapbox.navigation.ui.base.model.voice.Announcement announcement);
+    method public com.mapbox.navigation.ui.base.model.voice.Announcement getAnnouncement();
+  }
+
+  public static final class SpeechState.Shutdown extends com.mapbox.navigation.ui.base.model.voice.SpeechState {
+    field public static final com.mapbox.navigation.ui.base.model.voice.SpeechState.Shutdown! INSTANCE;
+  }
+
   public abstract static sealed class SpeechState.Speech extends com.mapbox.navigation.ui.base.model.voice.SpeechState {
+  }
+
+  public static final class SpeechState.Speech.Available extends com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech {
+    ctor public SpeechState.Speech.Available(com.mapbox.navigation.ui.base.model.voice.Announcement announcement);
+    method public com.mapbox.navigation.ui.base.model.voice.Announcement component1();
+    method public com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech.Available copy(com.mapbox.navigation.ui.base.model.voice.Announcement announcement);
+    method public com.mapbox.navigation.ui.base.model.voice.Announcement getAnnouncement();
   }
 
   public static final class SpeechState.Speech.Error extends com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech {
@@ -222,23 +252,8 @@ package com.mapbox.navigation.ui.base.model.voice {
     method public String? getException();
   }
 
-  public static final class SpeechState.Speech.Playing extends com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech {
-    field public static final com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech.Playing! INSTANCE;
-  }
-
-  public static final class SpeechState.Speech.Stopped extends com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech {
-    field public static final com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech.Stopped! INSTANCE;
-  }
-
-  public abstract static sealed class SpeechState.Volume extends com.mapbox.navigation.ui.base.model.voice.SpeechState {
-  }
-
-  public static final class SpeechState.Volume.Mute extends com.mapbox.navigation.ui.base.model.voice.SpeechState.Volume {
-    field public static final com.mapbox.navigation.ui.base.model.voice.SpeechState.Volume.Mute! INSTANCE;
-  }
-
-  public static final class SpeechState.Volume.Unmute extends com.mapbox.navigation.ui.base.model.voice.SpeechState.Volume {
-    field public static final com.mapbox.navigation.ui.base.model.voice.SpeechState.Volume.Unmute! INSTANCE;
+  public static final class SpeechState.Stop extends com.mapbox.navigation.ui.base.model.voice.SpeechState {
+    field public static final com.mapbox.navigation.ui.base.model.voice.SpeechState.Stop! INSTANCE;
   }
 
 }

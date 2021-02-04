@@ -588,11 +588,11 @@ package com.mapbox.navigation.ui.maps.signboard.api {
 
 package com.mapbox.navigation.ui.maps.signboard.view {
 
-  public final class MapboxSignboardView extends androidx.appcompat.widget.AppCompatImageView implements com.mapbox.navigation.ui.base.MapboxView<com.mapbox.navigation.ui.base.model.signboard.SignboardState> {
+  public final class MapboxSignboardView extends androidx.appcompat.widget.AppCompatImageView implements com.mapbox.navigation.ui.base.MapboxStateMachine<com.mapbox.navigation.ui.base.model.signboard.SignboardState> {
     ctor public MapboxSignboardView(android.content.Context context, android.util.AttributeSet? attrs, int defStyleAttr);
     ctor public MapboxSignboardView(android.content.Context context, android.util.AttributeSet? attrs);
     ctor public MapboxSignboardView(android.content.Context context);
-    method public void render(com.mapbox.navigation.ui.base.model.signboard.SignboardState state);
+    method public void apply(com.mapbox.navigation.ui.base.model.signboard.SignboardState state);
     field @Deprecated public static final com.mapbox.navigation.ui.maps.signboard.view.MapboxSignboardView.Companion! Companion;
   }
 
@@ -634,11 +634,11 @@ package com.mapbox.navigation.ui.maps.snapshotter.model {
 
 package com.mapbox.navigation.ui.maps.snapshotter.view {
 
-  public final class MapboxSnapshotView extends androidx.appcompat.widget.AppCompatImageView implements com.mapbox.navigation.ui.base.MapboxView<com.mapbox.navigation.ui.base.model.snapshotter.SnapshotState> {
+  public final class MapboxSnapshotView extends androidx.appcompat.widget.AppCompatImageView implements com.mapbox.navigation.ui.base.MapboxStateMachine<com.mapbox.navigation.ui.base.model.snapshotter.SnapshotState> {
     ctor public MapboxSnapshotView(android.content.Context context, android.util.AttributeSet? attrs, int defStyleAttr);
     ctor public MapboxSnapshotView(android.content.Context context, android.util.AttributeSet? attrs);
     ctor public MapboxSnapshotView(android.content.Context context);
-    method public void render(com.mapbox.navigation.ui.base.model.snapshotter.SnapshotState state);
+    method public void apply(com.mapbox.navigation.ui.base.model.snapshotter.SnapshotState state);
   }
 
 }

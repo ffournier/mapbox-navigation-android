@@ -294,7 +294,7 @@ class TripProgressActivity : AppCompatActivity(), OnMapLongClickListener {
     private val routeProgressObserver = object : RouteProgressObserver {
         override fun onRouteProgressChanged(routeProgress: RouteProgress) {
             tripProgressApiApi.getTripProgress(routeProgress).let { update ->
-                tripProgressView.render(update)
+                tripProgressView.apply(update)
             }
         }
     }
