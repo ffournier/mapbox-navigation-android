@@ -1,12 +1,14 @@
-package com.mapbox.navigation.ui.base.api.voice
+package com.mapbox.navigation.ui.voice.api
 
+import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
 
 /**
- * An Api that allows you to interact with the speech player
+ * Hybrid implementation of [SpeechPlayer] combining [MapboxOnboardSpeechPlayer] and
+ * [MapboxOffboardSpeechPlayer] speech players.
  */
-interface SpeechPlayer {
+class MapboxHybridSpeechPlayer : SpeechPlayer {
 
     /**
      * Given [SpeechState.Play] [Announcement] the method will play the voice instruction.
@@ -15,18 +17,24 @@ interface SpeechPlayer {
      * @param state SpeechState Play Announcement object including the announcement text
      * and optionally a synthesized speech mp3.
      */
-    fun play(state: SpeechState.Play)
+    override fun play(state: SpeechState.Play) {
+        TODO("Not yet implemented")
+    }
 
     /**
      * The method will set the volume to the specified level from [SpeechState.Volume].
      * @param state SpeechState Volume level.
      */
-    fun volume(state: SpeechState.Volume)
+    override fun volume(state: SpeechState.Volume) {
+        TODO("Not yet implemented")
+    }
 
     /**
      * Releases the resources used by the speech player.
      * If called while an announcement is currently playing,
      * the announcement should end immediately and any announcements queued should be cleared.
      */
-    fun shutdown()
+    override fun shutdown() {
+        TODO("Not yet implemented")
+    }
 }

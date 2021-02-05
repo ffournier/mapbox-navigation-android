@@ -44,7 +44,9 @@ import com.mapbox.navigation.core.trip.session.MapMatcherResult
 import com.mapbox.navigation.core.trip.session.MapMatcherResultObserver
 import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
+import com.mapbox.navigation.ui.base.api.voice.SpeechApi
 import com.mapbox.navigation.ui.base.api.voice.SpeechCallback
+import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
 import com.mapbox.navigation.ui.maps.camera.NavigationCamera
 import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSource
@@ -58,8 +60,8 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLine
-import com.mapbox.navigation.ui.voice.MapboxSpeechPlayer
-import com.mapbox.navigation.ui.voice.api.MapboxOnboardSpeechPlayerApi
+import com.mapbox.navigation.ui.voice.api.MapboxOffboardSpeechPlayer
+import com.mapbox.navigation.ui.voice.api.MapboxSpeechApi
 import com.mapbox.navigation.utils.internal.ifNonNull
 import kotlinx.android.synthetic.main.layout_camera_animations.mapView
 import kotlinx.android.synthetic.main.layout_voice.*
@@ -81,8 +83,9 @@ class VoiceActivity :
     private val routeArrowAPI: MapboxRouteArrowApi = MapboxRouteArrowApi()
     private var routeLineView: MapboxRouteLineView? = null
     private var routeArrowView: MapboxRouteArrowView? = null
-    private lateinit var speechAPI: MapboxOnboardSpeechPlayerApi
-    private var speechPlayer: MapboxSpeechPlayer? = null
+    private lateinit var speechAPI: SpeechApi
+    private var speechPlayer: SpeechPlayer? = null
+    private var isMuted: Boolean = false
 
     private lateinit var navigationCamera: NavigationCamera
     private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
@@ -129,7 +132,7 @@ class VoiceActivity :
 
     private val speechCallback = object : SpeechCallback {
         override fun onAvailable(state: SpeechState.Speech.Available) {
-            speechPlayer?.apply(SpeechState.Play(state.announcement))
+            speechPlayer?.play(SpeechState.Play(state.announcement))
         }
 
         override fun onError(error: SpeechState.Speech.Error) {
@@ -306,11 +309,16 @@ class VoiceActivity :
 
         val routeArrowOptions = RouteArrowOptions.Builder(this).build()
         routeArrowView = MapboxRouteArrowView(routeArrowOptions)
-        speechAPI = MapboxOnboardSpeechPlayerApi(
+        speechAPI = MapboxSpeechApi(
             this,
+            getMapboxAccessTokenFromResources(),
             Locale.US.language
         )
-        speechPlayer = MapboxSpeechPlayer(speechAPI)
+        speechPlayer = MapboxOffboardSpeechPlayer(
+            this,
+            getMapboxAccessTokenFromResources(),
+            Locale.US.language
+        )
     }
 
     private fun initStyle() {
@@ -350,7 +358,13 @@ class VoiceActivity :
 
     private fun initButtons() {
         stop.setOnClickListener {
-            speechPlayer?.apply(SpeechState.Stop)
+            isMuted = if (isMuted) {
+                speechPlayer?.volume(SpeechState.Volume(1.0f))
+                false
+            } else {
+                speechPlayer?.volume(SpeechState.Volume(0.0f))
+                true
+            }
         }
     }
 
@@ -389,7 +403,7 @@ class VoiceActivity :
         super.onDestroy()
         mapView.onDestroy()
         mapboxNavigation.onDestroy()
-        speechPlayer?.apply(SpeechState.Shutdown)
+        speechPlayer?.shutdown()
     }
 
     override fun onRequestPermissionsResult(

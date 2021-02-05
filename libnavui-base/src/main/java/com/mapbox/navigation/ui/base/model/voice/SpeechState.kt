@@ -1,5 +1,6 @@
 package com.mapbox.navigation.ui.base.model.voice
 
+import androidx.annotation.FloatRange
 import com.mapbox.navigation.ui.base.MapboxState
 
 /**
@@ -33,7 +34,7 @@ sealed class SpeechState : MapboxState {
     /**
      * The state is returned if the voice instruction is stopping.
      */
-    object Stop : SpeechState()
+    data class Volume(@FloatRange(from = 0.0, to = 1.0) val level: Float) : SpeechState()
 
     /**
      * The state is returned if the voice instruction is shutting down.

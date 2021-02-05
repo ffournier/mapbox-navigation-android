@@ -7,7 +7,8 @@ import retrofit2.Response
 
 internal object VoiceProcessor {
 
-    private const val SSML_TEXT_TYPE = "ssml"
+    private const val SSML_TYPE = "ssml"
+    private const val TEXT_TYPE = "text"
 
     /**
      * The function takes [VoiceAction] performs business logic and returns [VoiceResult]
@@ -23,8 +24,14 @@ internal object VoiceProcessor {
 
     private fun prepareRequest(instruction: VoiceInstructions): VoiceResult.VoiceRequest {
         val request = MapboxSpeech.builder()
-            .instruction(instruction.ssmlAnnouncement() ?: "")
-            .textType(SSML_TEXT_TYPE)
+            .instruction(instruction.ssmlAnnouncement() ?: instruction.announcement() ?: "")
+            .textType(
+                if (instruction.ssmlAnnouncement() != null) {
+                    SSML_TYPE
+                } else {
+                    TEXT_TYPE
+                }
+            )
         return VoiceResult.VoiceRequest(request)
     }
 

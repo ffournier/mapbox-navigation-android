@@ -59,9 +59,9 @@ package com.mapbox.navigation.ui.base.api.voice {
   }
 
   public interface SpeechPlayer {
-    method public void play(com.mapbox.navigation.ui.base.model.voice.Announcement announcement);
+    method public void play(com.mapbox.navigation.ui.base.model.voice.SpeechState.Play state);
     method public void shutdown();
-    method public void stop();
+    method public void volume(com.mapbox.navigation.ui.base.model.voice.SpeechState.Volume state);
   }
 
 }
@@ -213,12 +213,14 @@ package com.mapbox.navigation.ui.base.model.tripprogress {
 package com.mapbox.navigation.ui.base.model.voice {
 
   public final class Announcement {
-    ctor public Announcement(String announcement, java.io.File? file);
+    ctor public Announcement(String announcement, String? ssmlAnnouncement, java.io.File? file);
     method public String component1();
-    method public java.io.File? component2();
-    method public com.mapbox.navigation.ui.base.model.voice.Announcement copy(String announcement, java.io.File? file);
+    method public String? component2();
+    method public java.io.File? component3();
+    method public com.mapbox.navigation.ui.base.model.voice.Announcement copy(String announcement, String? ssmlAnnouncement, java.io.File? file);
     method public String getAnnouncement();
     method public java.io.File? getFile();
+    method public String? getSsmlAnnouncement();
   }
 
   public abstract sealed class SpeechState implements com.mapbox.navigation.ui.base.MapboxState {
@@ -252,8 +254,11 @@ package com.mapbox.navigation.ui.base.model.voice {
     method public String? getException();
   }
 
-  public static final class SpeechState.Stop extends com.mapbox.navigation.ui.base.model.voice.SpeechState {
-    field public static final com.mapbox.navigation.ui.base.model.voice.SpeechState.Stop! INSTANCE;
+  public static final class SpeechState.Volume extends com.mapbox.navigation.ui.base.model.voice.SpeechState {
+    ctor public SpeechState.Volume(@FloatRange(from=null, to=null) float level);
+    method public float component1();
+    method public com.mapbox.navigation.ui.base.model.voice.SpeechState.Volume copy(float level);
+    method public float getLevel();
   }
 
 }

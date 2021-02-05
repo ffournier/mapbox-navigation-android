@@ -1,38 +1,31 @@
 // Signature format: 3.0
-package com.mapbox.navigation.ui.voice {
-
-  public final class MapboxSpeechPlayer implements com.mapbox.navigation.ui.base.MapboxStateMachine<com.mapbox.navigation.ui.base.model.voice.SpeechState> {
-    ctor public MapboxSpeechPlayer(com.mapbox.navigation.ui.base.api.voice.SpeechPlayer speechPlayer);
-    method public void apply(com.mapbox.navigation.ui.base.model.voice.SpeechState state);
-  }
-
-}
-
 package com.mapbox.navigation.ui.voice.api {
 
-  public final class MapboxHybridSpeechPlayerApi implements com.mapbox.navigation.ui.base.api.voice.SpeechApi com.mapbox.navigation.ui.base.api.voice.SpeechPlayer {
+  public final class MapboxHybridSpeechPlayerApi implements com.mapbox.navigation.ui.base.api.voice.SpeechPlayer {
     ctor public MapboxHybridSpeechPlayerApi();
-    method public void generate(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
-    method public void play(com.mapbox.navigation.ui.base.model.voice.Announcement announcement);
+    method public void play(com.mapbox.navigation.ui.base.model.voice.SpeechState.Play state);
     method public void shutdown();
-    method public void stop();
+    method public void volume(com.mapbox.navigation.ui.base.model.voice.SpeechState.Volume state);
   }
 
-  public final class MapboxOffboardSpeechPlayerApi implements com.mapbox.navigation.ui.base.api.voice.SpeechApi com.mapbox.navigation.ui.base.api.voice.SpeechPlayer {
+  public final class MapboxOffboardSpeechPlayerApi implements com.mapbox.navigation.ui.base.api.voice.SpeechPlayer {
     ctor public MapboxOffboardSpeechPlayerApi(android.content.Context context, String accessToken, String language);
-    method public void generate(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
-    method public void play(com.mapbox.navigation.ui.base.model.voice.Announcement announcement);
+    method public void play(com.mapbox.navigation.ui.base.model.voice.SpeechState.Play state);
     method public void shutdown();
-    method public void stop();
+    method public void volume(com.mapbox.navigation.ui.base.model.voice.SpeechState.Volume state);
   }
 
-  public final class MapboxOnboardSpeechPlayerApi implements com.mapbox.navigation.ui.base.api.voice.SpeechApi com.mapbox.navigation.ui.base.api.voice.SpeechPlayer {
+  public final class MapboxOnboardSpeechPlayerApi implements com.mapbox.navigation.ui.base.api.voice.SpeechPlayer {
     ctor public MapboxOnboardSpeechPlayerApi(android.content.Context context, String language);
-    method public void generate(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
-    method public void play(com.mapbox.navigation.ui.base.model.voice.Announcement announcement);
+    method public void play(com.mapbox.navigation.ui.base.model.voice.SpeechState.Play state);
     method public void shutdown();
-    method public void stop();
+    method public void volume(com.mapbox.navigation.ui.base.model.voice.SpeechState.Volume state);
     field @Deprecated public static final com.mapbox.navigation.ui.voice.api.MapboxOnboardSpeechPlayerApi.Companion! Companion;
+  }
+
+  public final class MapboxSpeechApi implements com.mapbox.navigation.ui.base.api.voice.SpeechApi {
+    ctor public MapboxSpeechApi(android.content.Context context, String accessToken, String language);
+    method public void generate(com.mapbox.api.directions.v5.models.VoiceInstructions voiceInstruction, com.mapbox.navigation.ui.base.api.voice.SpeechCallback callback);
   }
 
 }
