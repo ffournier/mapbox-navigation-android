@@ -1,11 +1,12 @@
 package com.mapbox.navigation.ui.voice.api
 
 import android.content.Context
+import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
-import java.util.*
+import java.util.Locale
 
 /**
  * Offline implementation of [SpeechPlayer].
@@ -25,6 +26,7 @@ class MapboxOnboardSpeechPlayer(
         }
         initializeWithLanguage(Locale(language))
     }
+    private var volumeLevel: Float = DEFAULT_VOLUME_LEVEL
 
     /**
      * Given [SpeechState.Play] [Announcement] the method will play the voice instruction.
@@ -35,10 +37,12 @@ class MapboxOnboardSpeechPlayer(
      */
     override fun play(state: SpeechState.Play) {
         if (isLanguageSupported) {
+            val bundle = Bundle()
+            bundle.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volumeLevel)
             textToSpeech.speak(
                 state.announcement.announcement,
                 TextToSpeech.QUEUE_ADD,
-                null,
+                bundle,
                 DEFAULT_UTTERANCE_ID
             )
         }
@@ -49,7 +53,7 @@ class MapboxOnboardSpeechPlayer(
      * @param state SpeechState Volume level.
      */
     override fun volume(state: SpeechState.Volume) {
-        TODO("Not yet implemented")
+        volumeLevel = state.level
     }
 
     /**
@@ -59,6 +63,7 @@ class MapboxOnboardSpeechPlayer(
      */
     override fun shutdown() {
         textToSpeech.shutdown()
+        volumeLevel = DEFAULT_VOLUME_LEVEL
     }
 
     private fun initializeWithLanguage(language: Locale) {
@@ -73,5 +78,6 @@ class MapboxOnboardSpeechPlayer(
 
     private companion object {
         private const val DEFAULT_UTTERANCE_ID = "default_id"
+        private const val DEFAULT_VOLUME_LEVEL = 0.5f
     }
 }

@@ -32,9 +32,9 @@ import com.mapbox.maps.plugin.location.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.location.getLocationPlugin
 import com.mapbox.maps.plugin.location.modes.RenderMode
 import com.mapbox.navigation.base.internal.extensions.applyDefaultParams
+import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.base.trip.model.RouteProgress
 import com.mapbox.navigation.core.MapboxNavigation
-import com.mapbox.navigation.core.MapboxNavigation.Companion.defaultNavigationOptionsBuilder
 import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.core.replay.MapboxReplayer
 import com.mapbox.navigation.core.replay.ReplayLocationEngine
@@ -60,7 +60,7 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLine
-import com.mapbox.navigation.ui.voice.api.MapboxOffboardSpeechPlayer
+import com.mapbox.navigation.ui.voice.api.MapboxOnboardSpeechPlayer
 import com.mapbox.navigation.ui.voice.api.MapboxSpeechApi
 import com.mapbox.navigation.utils.internal.ifNonNull
 import kotlinx.android.synthetic.main.layout_camera_animations.mapView
@@ -86,6 +86,8 @@ class VoiceActivity :
     private lateinit var speechAPI: SpeechApi
     private var speechPlayer: SpeechPlayer? = null
     private var isMuted: Boolean = false
+    private var firstPlay: SpeechState.Play? = null
+    private var isFirst: Boolean = true
 
     private lateinit var navigationCamera: NavigationCamera
     private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
@@ -132,7 +134,12 @@ class VoiceActivity :
 
     private val speechCallback = object : SpeechCallback {
         override fun onAvailable(state: SpeechState.Speech.Available) {
-            speechPlayer?.play(SpeechState.Play(state.announcement))
+            val currentPlay = SpeechState.Play(state.announcement)
+            if (isFirst) {
+                firstPlay = currentPlay
+                isFirst = false
+            }
+            speechPlayer?.play(currentPlay)
         }
 
         override fun onError(error: SpeechState.Speech.Error) {
@@ -241,13 +248,12 @@ class VoiceActivity :
     }
 
     private fun initNavigation() {
-        val navigationOptions = defaultNavigationOptionsBuilder(
-            this,
-            getMapboxAccessTokenFromResources()
-        )
-            .locationEngine(ReplayLocationEngine(mapboxReplayer))
-            .build()
-        mapboxNavigation = MapboxNavigation(navigationOptions).apply {
+        mapboxNavigation = MapboxNavigation(
+            NavigationOptions.Builder(this)
+                .accessToken(getMapboxAccessTokenFromResources())
+                .locationEngine(ReplayLocationEngine(mapboxReplayer))
+                .build()
+        ).apply {
             registerLocationObserver(
                 object : LocationObserver {
 
@@ -314,9 +320,8 @@ class VoiceActivity :
             getMapboxAccessTokenFromResources(),
             Locale.US.language
         )
-        speechPlayer = MapboxOffboardSpeechPlayer(
+        speechPlayer = MapboxOnboardSpeechPlayer(
             this,
-            getMapboxAccessTokenFromResources(),
             Locale.US.language
         )
     }
@@ -357,13 +362,19 @@ class VoiceActivity :
     }
 
     private fun initButtons() {
-        stop.setOnClickListener {
+        mute_unmute.setOnClickListener {
             isMuted = if (isMuted) {
                 speechPlayer?.volume(SpeechState.Volume(1.0f))
                 false
             } else {
                 speechPlayer?.volume(SpeechState.Volume(0.0f))
                 true
+            }
+        }
+
+        add_play.setOnClickListener {
+            firstPlay?.let {
+                speechPlayer?.play(it)
             }
         }
     }

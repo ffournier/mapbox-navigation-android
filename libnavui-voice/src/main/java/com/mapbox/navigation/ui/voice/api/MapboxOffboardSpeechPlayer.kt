@@ -9,6 +9,8 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.util.Queue
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Online implementation of [SpeechPlayer].
@@ -23,8 +25,9 @@ class MapboxOffboardSpeechPlayer(
     private val language: String
 ) : SpeechPlayer {
 
-    private var mediaPlayer = MediaPlayer()
-    private var volumeLevel: Float = 0.5f
+    private var mediaPlayer: MediaPlayer? = null
+    private var volumeLevel: Float = DEFAULT_VOLUME_LEVEL
+    private var queue: Queue<File> = ConcurrentLinkedQueue()
 
     /**
      * Given [SpeechState.Play] [Announcement] the method will play the voice instruction.
@@ -35,7 +38,10 @@ class MapboxOffboardSpeechPlayer(
      */
     override fun play(state: SpeechState.Play) {
         state.announcement.file?.let {
-            setupMediaPlayer(it)
+            queue.add(it)
+        }
+        if (queue.size == 1) {
+            play()
         }
     }
 
@@ -45,7 +51,6 @@ class MapboxOffboardSpeechPlayer(
      */
     override fun volume(state: SpeechState.Volume) {
         volumeLevel = state.level
-        // FIXME: This may cause IllegalStateException
         setVolume(volumeLevel)
     }
 
@@ -55,7 +60,16 @@ class MapboxOffboardSpeechPlayer(
      * the announcement should end immediately and any announcements queued should be cleared.
      */
     override fun shutdown() {
-        mediaPlayer.release()
+        queue.clear()
+        mediaPlayer?.release()
+        mediaPlayer = null
+        volumeLevel = DEFAULT_VOLUME_LEVEL
+    }
+
+    private fun play() {
+        if (queue.isNotEmpty()) {
+            setupMediaPlayer(queue.peek())
+        }
     }
 
     private fun setupMediaPlayer(instruction: File) {
@@ -65,10 +79,9 @@ class MapboxOffboardSpeechPlayer(
         try {
             FileInputStream(instruction).use { fis ->
                 mediaPlayer = MediaPlayer()
-                // FIXME: This may cause IllegalStateException
                 setVolume(volumeLevel)
-                mediaPlayer.setDataSource(fis.fd)
-                mediaPlayer.prepareAsync()
+                mediaPlayer?.setDataSource(fis.fd)
+                mediaPlayer?.prepareAsync()
                 addListeners()
             }
         } catch (ex: FileNotFoundException) {
@@ -77,18 +90,25 @@ class MapboxOffboardSpeechPlayer(
     }
 
     private fun addListeners() {
-        mediaPlayer.setOnErrorListener { _, _, _ ->
+        mediaPlayer?.setOnErrorListener { _, _, _ ->
             false
         }
-        mediaPlayer.setOnPreparedListener { mp ->
+        mediaPlayer?.setOnPreparedListener { mp ->
             mp.start()
         }
-        mediaPlayer.setOnCompletionListener { mp ->
+        mediaPlayer?.setOnCompletionListener { mp ->
             mp.release()
+            mediaPlayer = null
+            queue.poll()
+            play()
         }
     }
 
     private fun setVolume(level: Float) {
-        mediaPlayer.setVolume(level, level)
+        mediaPlayer?.setVolume(level, level)
+    }
+
+    private companion object {
+        private const val DEFAULT_VOLUME_LEVEL = 0.5f
     }
 }
