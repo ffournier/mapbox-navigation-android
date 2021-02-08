@@ -23,16 +23,18 @@ sealed class SpeechState : MapboxState {
          * The state is returned if there is an error playing the voice instruction
          * @property exception String error message
          */
-        data class Error(val exception: String?) : Speech()
+        data class Error(val exception: String) : Speech()
     }
 
     /**
-     * The state is returned if the voice instruction is playing.
+     * The state is returned if the voice instruction is ready to be played.
+     * @property announcement
      */
     data class Play(val announcement: Announcement) : SpeechState()
 
     /**
-     * The state is returned if the voice instruction is stopping.
+     * The state is returned if we change the speech volume.
+     * @property level
      */
     data class Volume(@FloatRange(from = 0.0, to = 1.0) val level: Float) : SpeechState()
 

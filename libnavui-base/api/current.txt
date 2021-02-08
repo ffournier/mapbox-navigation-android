@@ -248,10 +248,10 @@ package com.mapbox.navigation.ui.base.model.voice {
   }
 
   public static final class SpeechState.Speech.Error extends com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech {
-    ctor public SpeechState.Speech.Error(String? exception);
-    method public String? component1();
-    method public com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech.Error copy(String? exception);
-    method public String? getException();
+    ctor public SpeechState.Speech.Error(String exception);
+    method public String component1();
+    method public com.mapbox.navigation.ui.base.model.voice.SpeechState.Speech.Error copy(String exception);
+    method public String getException();
   }
 
   public static final class SpeechState.Volume extends com.mapbox.navigation.ui.base.model.voice.SpeechState {
