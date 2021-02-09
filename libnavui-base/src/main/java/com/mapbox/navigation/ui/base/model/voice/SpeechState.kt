@@ -33,13 +33,13 @@ sealed class SpeechState : MapboxState {
     data class Play(val announcement: Announcement) : SpeechState()
 
     /**
+     * The state is returned if the voice instruction is done playing.
+     */
+    object Done : SpeechState()
+
+    /**
      * The state is returned if we change the speech volume.
      * @property level
      */
     data class Volume(@FloatRange(from = 0.0, to = 1.0) val level: Float) : SpeechState()
-
-    /**
-     * The state is returned if the voice instruction is shutting down.
-     */
-    object Shutdown : SpeechState()
 }

@@ -24,6 +24,11 @@ interface SpeechPlayer {
     fun volume(state: SpeechState.Volume)
 
     /**
+     * Clears any announcements queued.
+     */
+    fun clear()
+
+    /**
      * Releases the resources used by the speech player.
      * If called while an announcement is currently playing,
      * the announcement should end immediately and any announcements queued should be cleared.

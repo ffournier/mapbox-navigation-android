@@ -68,7 +68,7 @@ internal class MapboxVoiceApi(
 
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                         callback.onError(
-                            VoiceState.VoiceError(t.localizedMessage)
+                            VoiceState.VoiceError(t.localizedMessage ?: "Unknown")
                         )
                     }
                 })
@@ -86,13 +86,6 @@ internal class MapboxVoiceApi(
         }
 
     private fun retrieveUniqueId(): String = (++uniqueId).toString()
-
-    /**
-     * The method stops the process of retrieving the File and destroys any related callbacks.
-     */
-    override fun cancel() {
-        TODO("Not yet implemented")
-    }
 
     private companion object {
         private const val MAPBOX_INSTRUCTIONS_CACHE = "mapbox_instructions_cache"

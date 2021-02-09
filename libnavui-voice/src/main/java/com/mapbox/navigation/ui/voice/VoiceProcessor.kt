@@ -41,7 +41,7 @@ internal object VoiceProcessor {
                 VoiceResult.Voice.Success(it)
             } ?: VoiceResult.Voice.Empty
         } else {
-            VoiceResult.Voice.Failure(response.errorBody()?.string())
+            VoiceResult.Voice.Failure(response.errorBody()?.string() ?: "Unknown")
         }
     }
 }

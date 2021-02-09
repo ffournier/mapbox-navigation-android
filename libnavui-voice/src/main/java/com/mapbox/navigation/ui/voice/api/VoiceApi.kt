@@ -16,9 +16,4 @@ internal interface VoiceApi {
         voiceInstruction: VoiceInstructions,
         callback: VoiceCallback
     )
-
-    /**
-     * The method stops the process of retrieving the File and destroys any related callbacks.
-     */
-    fun cancel()
 }

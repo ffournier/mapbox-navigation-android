@@ -56,7 +56,7 @@ class MapboxSpeechApi(
                 }
 
                 override fun onError(error: VoiceState.VoiceError) {
-                    TODO("Not yet implemented")
+                    callback.onError(SpeechState.Speech.Error(error.exception))
                 }
             }
         )

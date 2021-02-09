@@ -1,14 +1,49 @@
 package com.mapbox.navigation.ui.voice.api
 
+import android.content.Context
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
+import com.mapbox.navigation.utils.internal.ThreadController
+import com.mapbox.navigation.utils.internal.monitorChannelWithException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import java.util.Queue
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Hybrid implementation of [SpeechPlayer] combining [MapboxOnboardSpeechPlayer] and
  * [MapboxOffboardSpeechPlayer] speech players.
+ * @property context Context
+ * @property accessToken String
+ * @property language String
  */
-class MapboxHybridSpeechPlayer : SpeechPlayer {
+class MapboxHybridSpeechPlayer(
+    private val context: Context,
+    private val accessToken: String,
+    private val language: String
+) : SpeechPlayer {
+
+    private val onDoneChannel = Channel<SpeechState.Done>(Channel.UNLIMITED)
+    private val onDoneReceiveChannel: ReceiveChannel<SpeechState.Done> = onDoneChannel
+    private val queue: Queue<SpeechState.Play> = ConcurrentLinkedQueue()
+    private val offboardSpeechPlayer: MapboxOffboardSpeechPlayer =
+        MapboxOffboardSpeechPlayer(context, accessToken, language).apply {
+            setDonePlayingChannel(onDoneChannel)
+        }
+    private val onboardSpeechPlayer: MapboxOnboardSpeechPlayer =
+        MapboxOnboardSpeechPlayer(context, language).apply {
+            setDonePlayingChannel(onDoneChannel)
+        }
+    private val onDoneJob: Job =
+        ThreadController.getMainScopeAndRootJob().scope.monitorChannelWithException(
+            onDoneReceiveChannel,
+            {
+                queue.poll()
+                play()
+            }
+        )
 
     /**
      * Given [SpeechState.Play] [Announcement] the method will play the voice instruction.
@@ -18,7 +53,10 @@ class MapboxHybridSpeechPlayer : SpeechPlayer {
      * and optionally a synthesized speech mp3.
      */
     override fun play(state: SpeechState.Play) {
-        TODO("Not yet implemented")
+        queue.add(state)
+        if (queue.size == 1) {
+            play()
+        }
     }
 
     /**
@@ -26,7 +64,17 @@ class MapboxHybridSpeechPlayer : SpeechPlayer {
      * @param state SpeechState Volume level.
      */
     override fun volume(state: SpeechState.Volume) {
-        TODO("Not yet implemented")
+        offboardSpeechPlayer.volume(state)
+        onboardSpeechPlayer.volume(state)
+    }
+
+    /**
+     * Clears any announcements queued.
+     */
+    override fun clear() {
+        queue.clear()
+        offboardSpeechPlayer.clear()
+        onboardSpeechPlayer.clear()
     }
 
     /**
@@ -35,6 +83,17 @@ class MapboxHybridSpeechPlayer : SpeechPlayer {
      * the announcement should end immediately and any announcements queued should be cleared.
      */
     override fun shutdown() {
-        TODO("Not yet implemented")
+        offboardSpeechPlayer.shutdown()
+        onboardSpeechPlayer.shutdown()
+        onDoneJob.cancel()
+    }
+
+    private fun play() {
+        if (queue.isNotEmpty()) {
+            val currentPlay = queue.peek()
+            currentPlay.announcement.file?.let {
+                offboardSpeechPlayer.play(currentPlay)
+            } ?: onboardSpeechPlayer.play(currentPlay)
+        }
     }
 }

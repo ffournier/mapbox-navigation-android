@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
+import kotlinx.coroutines.channels.Channel
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -28,6 +29,7 @@ class MapboxOffboardSpeechPlayer(
     private var mediaPlayer: MediaPlayer? = null
     private var volumeLevel: Float = DEFAULT_VOLUME_LEVEL
     private var queue: Queue<File> = ConcurrentLinkedQueue()
+    private var donePlayingChannel: Channel<SpeechState.Done>? = null
 
     /**
      * Given [SpeechState.Play] [Announcement] the method will play the voice instruction.
@@ -37,8 +39,9 @@ class MapboxOffboardSpeechPlayer(
      * and optionally a synthesized speech mp3.
      */
     override fun play(state: SpeechState.Play) {
-        state.announcement.file?.let {
-            queue.add(it)
+        val file = state.announcement.file
+        if (file != null && file.canRead()) {
+            queue.add(file)
         }
         if (queue.size == 1) {
             play()
@@ -55,15 +58,25 @@ class MapboxOffboardSpeechPlayer(
     }
 
     /**
+     * Clears any announcements queued.
+     */
+    override fun clear() {
+        queue.clear()
+        resetMediaPlayer(mediaPlayer)
+    }
+
+    /**
      * Releases the resources used by the speech player.
      * If called while an announcement is currently playing,
      * the announcement should end immediately and any announcements queued should be cleared.
      */
     override fun shutdown() {
-        queue.clear()
-        mediaPlayer?.release()
-        mediaPlayer = null
+        clear()
         volumeLevel = DEFAULT_VOLUME_LEVEL
+    }
+
+    internal fun setDonePlayingChannel(channel: Channel<SpeechState.Done>) {
+        this.donePlayingChannel = channel
     }
 
     private fun play() {
@@ -73,9 +86,6 @@ class MapboxOffboardSpeechPlayer(
     }
 
     private fun setupMediaPlayer(instruction: File) {
-        if (!instruction.canRead()) {
-            return
-        }
         try {
             FileInputStream(instruction).use { fis ->
                 mediaPlayer = MediaPlayer()
@@ -85,7 +95,9 @@ class MapboxOffboardSpeechPlayer(
                 addListeners()
             }
         } catch (ex: FileNotFoundException) {
+            playNext(mediaPlayer)
         } catch (ex: IOException) {
+            playNext(mediaPlayer)
         }
     }
 
@@ -97,15 +109,24 @@ class MapboxOffboardSpeechPlayer(
             mp.start()
         }
         mediaPlayer?.setOnCompletionListener { mp ->
-            mp.release()
-            mediaPlayer = null
-            queue.poll()
-            play()
+            playNext(mp)
         }
+    }
+
+    private fun playNext(mp: MediaPlayer?) {
+        resetMediaPlayer(mp)
+        queue.poll()
+        donePlayingChannel?.offer(SpeechState.Done)
+        play()
     }
 
     private fun setVolume(level: Float) {
         mediaPlayer?.setVolume(level, level)
+    }
+
+    private fun resetMediaPlayer(mp: MediaPlayer?) {
+        mp?.release()
+        mediaPlayer = null
     }
 
     private companion object {

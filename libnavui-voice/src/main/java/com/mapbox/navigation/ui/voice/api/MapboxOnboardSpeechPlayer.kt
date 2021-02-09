@@ -7,6 +7,7 @@ import android.speech.tts.UtteranceProgressListener
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
+import kotlinx.coroutines.channels.Channel
 import java.util.Locale
 import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -31,6 +32,7 @@ class MapboxOnboardSpeechPlayer(
     }
     private var volumeLevel: Float = DEFAULT_VOLUME_LEVEL
     private var queue: Queue<String> = ConcurrentLinkedQueue()
+    private var donePlayingChannel: Channel<SpeechState.Done>? = null
 
     /**
      * Given [SpeechState.Play] [Announcement] the method will play the voice instruction.
@@ -62,6 +64,14 @@ class MapboxOnboardSpeechPlayer(
     }
 
     /**
+     * Clears any announcements queued.
+     */
+    override fun clear() {
+        queue.clear()
+        textToSpeech.stop()
+    }
+
+    /**
      * Releases the resources used by the speech player.
      * If called while an announcement is currently playing,
      * the announcement should end immediately and any announcements queued should be cleared.
@@ -71,6 +81,10 @@ class MapboxOnboardSpeechPlayer(
         textToSpeech.setOnUtteranceProgressListener(null)
         textToSpeech.shutdown()
         volumeLevel = DEFAULT_VOLUME_LEVEL
+    }
+
+    internal fun setDonePlayingChannel(channel: Channel<SpeechState.Done>) {
+        this.donePlayingChannel = channel
     }
 
     private fun initializeWithLanguage(language: Locale) {
@@ -102,6 +116,7 @@ class MapboxOnboardSpeechPlayer(
 
     private fun playNext() {
         queue.poll()
+        donePlayingChannel?.offer(SpeechState.Done)
         play()
     }
 
@@ -111,7 +126,7 @@ class MapboxOnboardSpeechPlayer(
             bundle.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volumeLevel)
             textToSpeech.speak(
                 queue.peek(),
-                TextToSpeech.QUEUE_FLUSH,
+                TextToSpeech.QUEUE_ADD,
                 bundle,
                 DEFAULT_UTTERANCE_ID
             )

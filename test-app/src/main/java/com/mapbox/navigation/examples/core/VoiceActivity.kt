@@ -47,6 +47,7 @@ import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
 import com.mapbox.navigation.ui.base.api.voice.SpeechApi
 import com.mapbox.navigation.ui.base.api.voice.SpeechCallback
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
+import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
 import com.mapbox.navigation.ui.maps.camera.NavigationCamera
 import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSource
@@ -60,7 +61,7 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLine
-import com.mapbox.navigation.ui.voice.api.MapboxOnboardSpeechPlayer
+import com.mapbox.navigation.ui.voice.api.MapboxHybridSpeechPlayer
 import com.mapbox.navigation.ui.voice.api.MapboxSpeechApi
 import com.mapbox.navigation.utils.internal.ifNonNull
 import kotlinx.android.synthetic.main.layout_camera_animations.mapView
@@ -136,7 +137,9 @@ class VoiceActivity :
         override fun onAvailable(state: SpeechState.Speech.Available) {
             val currentPlay = SpeechState.Play(state.announcement)
             if (isFirst) {
-                firstPlay = currentPlay
+                firstPlay = SpeechState.Play(
+                    Announcement("Marina is awesome", null, null)
+                )
                 isFirst = false
             }
             speechPlayer?.play(currentPlay)
@@ -320,8 +323,9 @@ class VoiceActivity :
             getMapboxAccessTokenFromResources(),
             Locale.US.language
         )
-        speechPlayer = MapboxOnboardSpeechPlayer(
+        speechPlayer = MapboxHybridSpeechPlayer(
             this,
+            getMapboxAccessTokenFromResources(),
             Locale.US.language
         )
     }

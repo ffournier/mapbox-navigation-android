@@ -17,5 +17,5 @@ internal sealed class VoiceState : MapboxState {
      * The state is returned if there is an error preparing the [File]
      * @property exception String error message
      */
-    data class VoiceError(val exception: String?) : VoiceState()
+    data class VoiceError(val exception: String) : VoiceState()
 }
