@@ -55,12 +55,14 @@ internal object RouteArrowUtils {
     }
 
     fun initializeLayers(style: Style, options: RouteArrowOptions) {
-        if (
-            !style.fullyLoaded ||
-            layersAreInitialized(style) ||
-            !style.styleLayerExists(options.aboveLayerId)
-        ) {
+        if (!style.fullyLoaded || layersAreInitialized(style)) {
             return
+        }
+
+        val aboveLayerIdToUse = if (style.styleLayerExists(options.aboveLayerId)) {
+            options.aboveLayerId
+        } else {
+            null
         }
 
         if (!style.styleSourceExists(RouteConstants.ARROW_SHAFT_SOURCE_ID)) {
@@ -286,7 +288,7 @@ internal object RouteArrowUtils {
                 }
             )
 
-        style.addLayerAbove(arrowShaftCasingLayer, options.aboveLayerId)
+        style.addLayerAbove(arrowShaftCasingLayer, aboveLayerIdToUse)
         style.addLayerAbove(arrowHeadCasingLayer, arrowShaftCasingLayer.layerId)
         style.addLayerAbove(arrowShaftLayer, arrowHeadCasingLayer.layerId)
         style.addLayerAbove(arrowHeadLayer, arrowShaftLayer.layerId)

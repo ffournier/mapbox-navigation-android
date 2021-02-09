@@ -13,14 +13,12 @@ import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
 import com.mapbox.maps.LayerPosition
 import com.mapbox.maps.Style
-import com.mapbox.maps.StyleObjectInfo
 import com.mapbox.maps.extension.style.expressions.dsl.generated.color
 import com.mapbox.maps.extension.style.expressions.dsl.generated.eq
 import com.mapbox.maps.extension.style.expressions.generated.Expression
 import com.mapbox.maps.extension.style.layers.getLayer
 import com.mapbox.maps.extension.style.layers.properties.generated.Visibility
 import com.mapbox.maps.extension.style.sources.generated.geoJsonSource
-import com.mapbox.maps.plugin.location.LocationComponentConstants
 import com.mapbox.navigation.ui.base.internal.route.RouteConstants
 import com.mapbox.navigation.ui.maps.R
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
@@ -36,7 +34,6 @@ import com.mapbox.navigation.ui.maps.route.line.model.RouteStyleDescriptor
 import com.mapbox.navigation.ui.utils.internal.ifNonNull
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfMisc
-import timber.log.Timber
 import java.util.UUID
 import kotlin.math.ln
 import kotlin.math.max
@@ -533,52 +530,6 @@ object MapboxRouteLineUtils {
     }
 
     /**
-     * Checks if a layer with the given ID exists else returns a default layer ID
-     * @param layerId the layer ID to look for
-     * @param style the style containing the layers
-     *
-     * @return either the layer ID if found else a default layer ID
-     */
-    @JvmStatic
-    fun getDefaultBelowLayer(layerId: String?, style: Style): String {
-        val layers = style.styleLayers
-        return when (layerId.isNullOrEmpty()) {
-            false -> checkLayerIdPresent(layerId, layers)
-            true -> findLayerBelow(layers)
-        }
-    }
-
-    private fun checkLayerIdPresent(layerId: String, layers: List<StyleObjectInfo>): String {
-        val foundId = layers.firstOrNull { it.id == layerId }?.id
-        if (foundId == null) {
-            Timber.e(
-                """Tried placing route line below "$layerId" which doesn't exist"""
-            )
-        }
-        return foundId ?: LocationComponentConstants.FOREGROUND_LAYER
-    }
-
-    /**
-     * Tries to find a reference layer ID that's above a first non-symbol layer from the top
-     * of the stack of layers. Additionally, the algorithm always ensures that the reference
-     * layer is below the puck layers.
-     */
-    private fun findLayerBelow(layers: List<StyleObjectInfo>): String {
-        val puckLayerIndex = layers.indexOfFirst {
-            it.id.contains(RouteConstants.MAPBOX_LOCATION_ID)
-        }
-        val lastSymbolLayerFromTopIndex = layers.indexOfLast {
-            it.type != "symbol" && !it.id.contains(RouteConstants.MAPBOX_LOCATION_ID)
-        } + 1
-        val index = if (puckLayerIndex in 0 until lastSymbolLayerFromTopIndex) {
-            puckLayerIndex
-        } else {
-            lastSymbolLayerFromTopIndex
-        }
-        return layers.getOrNull(index)?.id ?: LocationComponentConstants.FOREGROUND_LAYER
-    }
-
-    /**
      * Calculates the distance between 2 points using
      * [EPSG:3857 projection](https://epsg.io/3857).
      * Info in [mapbox-gl-js/issues/9998](https://github.com/mapbox/mapbox-gl-js/issues/9998).
@@ -663,19 +614,6 @@ object MapboxRouteLineUtils {
             return
         }
 
-        val belowLayerIdToUse: String =
-            getDefaultBelowLayer(
-                options.routeLineBelowLayerId,
-                style
-            )
-
-        if (!style.styleLayerExists(belowLayerIdToUse)) {
-            Timber.w(
-                """Tried placing route line below "$belowLayerIdToUse" which doesn't exist"""
-            )
-            return
-        }
-
         if (!style.styleSourceExists(RouteConstants.WAYPOINT_SOURCE_ID)) {
             geoJsonSource(RouteConstants.WAYPOINT_SOURCE_ID) {
                 maxzoom(16)
@@ -715,7 +653,7 @@ object MapboxRouteLineUtils {
             style,
             options.resourceProvider.routeLineColorResources.alternativeRouteCasingColor
         ).forEach {
-            it.bindTo(style, LayerPosition(null, belowLayerIdToUse, null))
+            it.bindTo(style, LayerPosition(null, options.routeLineBelowLayerId, null))
         }
 
         options.routeLayerProvider.buildAlternativeRouteLayers(
@@ -723,7 +661,7 @@ object MapboxRouteLineUtils {
             options.resourceProvider.roundedLineCap,
             options.resourceProvider.routeLineColorResources.alternativeRouteDefaultColor
         ).forEach {
-            it.bindTo(style, LayerPosition(null, belowLayerIdToUse, null))
+            it.bindTo(style, LayerPosition(null, options.routeLineBelowLayerId, null))
         }
 
         options.routeLayerProvider.buildAlternativeRouteTrafficLayers(
@@ -731,31 +669,31 @@ object MapboxRouteLineUtils {
             options.resourceProvider.roundedLineCap,
             options.resourceProvider.routeLineColorResources.alternativeRouteDefaultColor
         ).forEach {
-            it.bindTo(style, LayerPosition(null, belowLayerIdToUse, null))
+            it.bindTo(style, LayerPosition(null, options.routeLineBelowLayerId, null))
         }
 
         options.routeLayerProvider.buildPrimaryRouteCasingLayer(
             style,
             options.resourceProvider.routeLineColorResources.routeCasingColor
-        ).bindTo(style, LayerPosition(null, belowLayerIdToUse, null))
+        ).bindTo(style, LayerPosition(null, options.routeLineBelowLayerId, null))
 
         options.routeLayerProvider.buildPrimaryRouteLayer(
             style,
             options.resourceProvider.roundedLineCap,
             options.resourceProvider.routeLineColorResources.routeDefaultColor
-        ).bindTo(style, LayerPosition(null, belowLayerIdToUse, null))
+        ).bindTo(style, LayerPosition(null, options.routeLineBelowLayerId, null))
 
         options.routeLayerProvider.buildPrimaryRouteTrafficLayer(
             style,
             options.resourceProvider.roundedLineCap,
             options.resourceProvider.routeLineColorResources.routeDefaultColor
-        ).bindTo(style, LayerPosition(null, belowLayerIdToUse, null))
+        ).bindTo(style, LayerPosition(null, options.routeLineBelowLayerId, null))
 
         options.routeLayerProvider.buildWayPointLayer(
             style,
             options.originIcon,
             options.destinationIcon
-        ).bindTo(style, LayerPosition(null, belowLayerIdToUse, null))
+        ).bindTo(style, LayerPosition(null, options.routeLineBelowLayerId, null))
     }
 
     internal fun layersAreInitialized(style: Style): Boolean {

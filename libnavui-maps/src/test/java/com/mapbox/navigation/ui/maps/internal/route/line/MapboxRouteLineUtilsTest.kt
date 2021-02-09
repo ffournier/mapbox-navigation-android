@@ -11,8 +11,6 @@ import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
 import com.mapbox.maps.LayerPosition
 import com.mapbox.maps.Style
-import com.mapbox.maps.StyleObjectInfo
-import com.mapbox.maps.plugin.location.LocationComponentConstants
 import com.mapbox.navigation.testing.FileUtils
 import com.mapbox.navigation.testing.FileUtils.loadJsonFixture
 import com.mapbox.navigation.ui.base.internal.route.RouteConstants
@@ -222,55 +220,10 @@ class MapboxRouteLineUtilsTest {
     }
 
     @Test
-    fun initializeLayers_whenBelowLayerDoesNotExist() {
-        val appleLayer = mockk<StyleObjectInfo> {
-            every { id } returns "apple"
-            every { type } returns "fruit"
-        }
-        val bananaLayer = mockk<StyleObjectInfo> {
-            every { id } returns "banana"
-            every { type } returns "fruit"
-        }
-        val cherryLayer = mockk<StyleObjectInfo> {
-            every { id } returns "cherry"
-            every { type } returns "fruit"
-        }
-        val options = MapboxRouteLineOptions.Builder(ctx).build()
-        val style = mockk<Style> {
-            every { fullyLoaded } returns true
-            every { styleLayers } returns listOf(appleLayer, bananaLayer, cherryLayer)
-            every { styleSourceExists(RouteConstants.PRIMARY_ROUTE_SOURCE_ID) } returns true
-            every { styleSourceExists(RouteConstants.ALTERNATIVE_ROUTE1_SOURCE_ID) } returns true
-            every { styleSourceExists(RouteConstants.ALTERNATIVE_ROUTE2_SOURCE_ID) } returns true
-            every { styleLayerExists(RouteConstants.PRIMARY_ROUTE_LAYER_ID) } returns true
-            every { styleLayerExists(RouteConstants.PRIMARY_ROUTE_TRAFFIC_LAYER_ID) } returns true
-            every { styleLayerExists(RouteConstants.PRIMARY_ROUTE_CASING_LAYER_ID) } returns true
-            every { styleLayerExists(RouteConstants.ALTERNATIVE_ROUTE1_LAYER_ID) } returns true
-            every { styleLayerExists(RouteConstants.ALTERNATIVE_ROUTE2_LAYER_ID) } returns true
-            every {
-                styleLayerExists(RouteConstants.ALTERNATIVE_ROUTE1_CASING_LAYER_ID)
-            } returns false
-            every {
-                styleLayerExists(RouteConstants.ALTERNATIVE_ROUTE2_CASING_LAYER_ID)
-            } returns false
-            every {
-                styleLayerExists(RouteConstants.ALTERNATIVE_ROUTE1_TRAFFIC_LAYER_ID)
-            } returns false
-            every {
-                styleLayerExists(RouteConstants.ALTERNATIVE_ROUTE2_TRAFFIC_LAYER_ID)
-            } returns false
-            every { styleSourceExists(RouteConstants.WAYPOINT_SOURCE_ID) } returns false
-            every { styleLayerExists(any()) } returns false
-        }
-
-        MapboxRouteLineUtils.initializeLayers(style, options)
-
-        verify(exactly = 0) { style.addStyleSource(any(), any()) }
-    }
-
-    @Test
     fun initializeLayers() {
-        val options = MapboxRouteLineOptions.Builder(ctx).build()
+        val options = MapboxRouteLineOptions.Builder(ctx)
+            .withRouteLineBelowLayerId("mapbox-location-foreground-layer")
+            .build()
         val waypointSourceValueSlot = slot<Value>()
         val primaryRouteSourceValueSlot = slot<Value>()
         val alternativeRoute1SourceValueSlot = slot<Value>()
@@ -306,7 +259,7 @@ class MapboxRouteLineUtilsTest {
                 styleLayerExists(RouteConstants.ALTERNATIVE_ROUTE2_TRAFFIC_LAYER_ID)
             } returns false
             every { styleLayerExists(RouteConstants.WAYPOINT_LAYER_ID) } returns false
-            every { styleLayerExists("mapbox-location-foreground-layer") } returns true
+            // every { styleLayerExists("mapbox-location-foreground-layer") } returns true
             every {
                 addStyleSource(RouteConstants.WAYPOINT_SOURCE_ID, any())
             } returns ExpectedFactory.createValue()
@@ -552,79 +505,6 @@ class MapboxRouteLineUtilsTest {
         assertEquals(0.0000025451727518618744, result.distancesArray[0].distanceRemaining, 0.0)
         assertEquals(Point.fromLngLat(-122.523131, 37.975067), result.distancesArray[4].point)
         assertEquals(0.0, result.distancesArray[4].distanceRemaining, 0.0)
-    }
-
-    @Test
-    fun getDefaultBelowLayer_whenLayerIdNotFoundReturnsDefault() {
-        val style = mockk<Style> {
-            every { styleLayers } returns listOf()
-        }
-
-        val result = MapboxRouteLineUtils.getDefaultBelowLayer("foobar", style)
-
-        assertEquals(LocationComponentConstants.FOREGROUND_LAYER, result)
-    }
-
-    @Test
-    fun getDefaultBelowLayer_whenLayerIdNotSpecified() {
-        val layer0 = mockk<StyleObjectInfo> {
-            every { id } returns "layer0"
-            every { type } returns "symbol"
-        }
-        val layer1 = mockk<StyleObjectInfo> {
-            every { id } returns "layer1"
-            every { type } returns "line"
-        }
-        val layer2 = mockk<StyleObjectInfo> {
-            every { id } returns RouteConstants.MAPBOX_LOCATION_ID
-            every { type } returns "line"
-        }
-        val layer3 = mockk<StyleObjectInfo> {
-            every { id } returns "layer3"
-            every { type } returns "line"
-        }
-        val layer4 = mockk<StyleObjectInfo> {
-            every { id } returns "layer4"
-            every { type } returns "symbol"
-        }
-        val style = mockk<Style> {
-            every { styleLayers } returns listOf(layer0, layer1, layer2, layer3, layer4)
-        }
-
-        val result = MapboxRouteLineUtils.getDefaultBelowLayer(null, style)
-
-        assertEquals(RouteConstants.MAPBOX_LOCATION_ID, result)
-    }
-
-    @Test
-    fun getDefaultBelowLayer_whenLayerIdNotSpecifiedAndSymbolLayerNotFound() {
-        val layer0 = mockk<StyleObjectInfo> {
-            every { id } returns "layer0"
-            every { type } returns "line"
-        }
-        val layer1 = mockk<StyleObjectInfo> {
-            every { id } returns "layer1"
-            every { type } returns "line"
-        }
-        val layer2 = mockk<StyleObjectInfo> {
-            every { id } returns "layer2"
-            every { type } returns "line"
-        }
-        val layer3 = mockk<StyleObjectInfo> {
-            every { id } returns "layer3"
-            every { type } returns "line"
-        }
-        val layer4 = mockk<StyleObjectInfo> {
-            every { id } returns "layer4"
-            every { type } returns "line"
-        }
-        val style = mockk<Style> {
-            every { styleLayers } returns listOf(layer0, layer1, layer2, layer3, layer4)
-        }
-
-        val result = MapboxRouteLineUtils.getDefaultBelowLayer(null, style)
-
-        assertEquals(LocationComponentConstants.FOREGROUND_LAYER, result)
     }
 
     @Test

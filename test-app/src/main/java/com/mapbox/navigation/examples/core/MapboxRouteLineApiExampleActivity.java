@@ -150,6 +150,7 @@ public class MapboxRouteLineApiExampleActivity extends AppCompatActivity impleme
     MapboxRouteLineOptions mapboxRouteLineOptions = new MapboxRouteLineOptions.Builder(this)
         .withRouteLineResources(routeLineResources)
         .withVanishingRouteLineEnabled(true)
+        .withRouteLineBelowLayerId("road-label")
         .build();
 
     mapboxRouteLineApi = new MapboxRouteLineApi(mapboxRouteLineOptions);
