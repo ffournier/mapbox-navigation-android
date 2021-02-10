@@ -1,4 +1,4 @@
-package com.mapbox.navigation.examples.core.replay.history
+package com.mapbox.navigation.examples.core.replay
 
 import android.annotation.SuppressLint
 import android.os.Bundle

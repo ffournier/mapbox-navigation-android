@@ -15,6 +15,7 @@ import com.mapbox.navigation.examples.core.MapboxRouteLineApiExampleActivity
 import com.mapbox.navigation.examples.core.MapboxSignboardActivity
 import com.mapbox.navigation.examples.core.MapboxSnapshotActivity
 import com.mapbox.navigation.examples.core.R
+import com.mapbox.navigation.examples.core.ReplayHistoryActivity
 import com.mapbox.navigation.examples.core.SlackLineActivity
 import com.mapbox.navigation.examples.core.TripProgressActivity
 import com.mapbox.navigation.examples.core.camera.CameraAnimationsActivity
@@ -78,6 +79,11 @@ class MainActivity : AppCompatActivity(), PermissionsListener {
                 getString(R.string.title_trip_progress),
                 getString(R.string.description_trip_progress),
                 TripProgressActivity::class.java
+            ),
+            SampleItem(
+                getString(R.string.title_replay_history_kotlin),
+                getString(R.string.description_replay_history_kotlin),
+                ReplayHistoryActivity::class.java
             )
         )
     }

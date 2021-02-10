@@ -1,4 +1,4 @@
-package com.mapbox.navigation.examples.core.replay.history
+package com.mapbox.navigation.examples.core.replay
 
 import androidx.annotation.Keep
 import com.google.gson.annotations.SerializedName

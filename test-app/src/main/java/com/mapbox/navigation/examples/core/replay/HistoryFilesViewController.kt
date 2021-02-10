@@ -1,4 +1,4 @@
-package com.mapbox.navigation.examples.core.replay.history
+package com.mapbox.navigation.examples.core.replay
 
 import android.content.Context
 import com.google.gson.Gson

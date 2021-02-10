@@ -1,4 +1,4 @@
-package com.mapbox.navigation.examples.core.replay.history
+package com.mapbox.navigation.examples.core.replay
 
 import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.trip.session.TripSessionState

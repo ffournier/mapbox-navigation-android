@@ -48,6 +48,19 @@
     </activity>
 
     <activity
+        android:name=".ReplayHistoryActivity"
+        android:label="@string/title_select_replay_history" >
+    </activity>
+
+    <activity
+        android:name="com.mapbox.navigation.examples.core.replay.HistoryFilesActivity"
+        android:label="@string/title_select_replay_history" >
+      <meta-data
+          android:name="android.support.PARENT_ACTIVITY"
+          android:value=".ReplayHistoryActivity" />
+    </activity>
+
+    <activity
         android:name="com.mapbox.navigation.examples.MainActivity"
         android:label="@string/title_navigation_route_ui"
         android:screenOrientation="portrait">
