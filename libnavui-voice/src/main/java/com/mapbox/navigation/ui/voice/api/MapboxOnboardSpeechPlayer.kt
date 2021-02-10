@@ -10,8 +10,6 @@ import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
 import kotlinx.coroutines.channels.Channel
 import java.util.Locale
-import java.util.Queue
-import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Offline implementation of [SpeechPlayer].
@@ -32,7 +30,6 @@ class MapboxOnboardSpeechPlayer(
         initializeWithLanguage(Locale(language))
     }
     private var volumeLevel: Float = DEFAULT_VOLUME_LEVEL
-    private var queue: Queue<SpeechState.Play> = ConcurrentLinkedQueue()
     private var donePlayingChannel: Channel<SpeechState.Done>? = null
 
     /**
@@ -44,11 +41,11 @@ class MapboxOnboardSpeechPlayer(
      */
     override fun play(state: SpeechState.Play) {
         if (isLanguageSupported) {
-            Log.d("DEBUG", "DEBUG Onboard add ${state.javaClass.name}@${Integer.toHexString(state.hashCode())}")
-            queue.add(state)
-        }
-        if (queue.size == 1) {
-            play()
+            Log.d(
+                "DEBUG",
+                "DEBUG Onboard add ${state.javaClass.name}@${Integer.toHexString(state.hashCode())}"
+            )
+            play(state.announcement)
         }
     }
 
@@ -69,7 +66,6 @@ class MapboxOnboardSpeechPlayer(
      * Clears any announcements queued.
      */
     override fun clear() {
-        queue.clear()
         textToSpeech.stop()
     }
 
@@ -79,7 +75,6 @@ class MapboxOnboardSpeechPlayer(
      * the announcement should end immediately and any announcements queued should be cleared.
      */
     override fun shutdown() {
-        queue.clear()
         textToSpeech.setOnUtteranceProgressListener(null)
         textToSpeech.shutdown()
         volumeLevel = DEFAULT_VOLUME_LEVEL
@@ -117,23 +112,18 @@ class MapboxOnboardSpeechPlayer(
     }
 
     private fun playNext() {
-        val current = queue.poll()
-        Log.d("DEBUG", "DEBUG Onboard poll ${current.javaClass.name}@${Integer.toHexString(current.hashCode())}")
         donePlayingChannel?.offer(SpeechState.Done)
-        play()
     }
 
-    private fun play() {
-        if (queue.isNotEmpty()) {
-            val bundle = Bundle()
-            bundle.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volumeLevel)
-            textToSpeech.speak(
-                queue.peek().announcement.announcement,
-                TextToSpeech.QUEUE_ADD,
-                bundle,
-                DEFAULT_UTTERANCE_ID
-            )
-        }
+    private fun play(announcement: Announcement) {
+        val bundle = Bundle()
+        bundle.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volumeLevel)
+        textToSpeech.speak(
+            announcement.announcement,
+            TextToSpeech.QUEUE_FLUSH,
+            bundle,
+            DEFAULT_UTTERANCE_ID
+        )
     }
 
     private companion object {
