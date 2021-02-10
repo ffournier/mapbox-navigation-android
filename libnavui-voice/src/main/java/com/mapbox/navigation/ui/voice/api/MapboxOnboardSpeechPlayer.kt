@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
@@ -31,7 +32,7 @@ class MapboxOnboardSpeechPlayer(
         initializeWithLanguage(Locale(language))
     }
     private var volumeLevel: Float = DEFAULT_VOLUME_LEVEL
-    private var queue: Queue<String> = ConcurrentLinkedQueue()
+    private var queue: Queue<SpeechState.Play> = ConcurrentLinkedQueue()
     private var donePlayingChannel: Channel<SpeechState.Done>? = null
 
     /**
@@ -43,7 +44,8 @@ class MapboxOnboardSpeechPlayer(
      */
     override fun play(state: SpeechState.Play) {
         if (isLanguageSupported) {
-            queue.add(state.announcement.announcement)
+            Log.d("DEBUG", "DEBUG Onboard add ${state.javaClass.name}@${Integer.toHexString(state.hashCode())}")
+            queue.add(state)
         }
         if (queue.size == 1) {
             play()
@@ -115,7 +117,8 @@ class MapboxOnboardSpeechPlayer(
     }
 
     private fun playNext() {
-        queue.poll()
+        val current = queue.poll()
+        Log.d("DEBUG", "DEBUG Onboard poll ${current.javaClass.name}@${Integer.toHexString(current.hashCode())}")
         donePlayingChannel?.offer(SpeechState.Done)
         play()
     }
@@ -125,7 +128,7 @@ class MapboxOnboardSpeechPlayer(
             val bundle = Bundle()
             bundle.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volumeLevel)
             textToSpeech.speak(
-                queue.peek(),
+                queue.peek().announcement.announcement,
                 TextToSpeech.QUEUE_ADD,
                 bundle,
                 DEFAULT_UTTERANCE_ID

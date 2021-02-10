@@ -378,7 +378,7 @@ class VoiceActivity :
 
         add_play.setOnClickListener {
             firstPlay?.let {
-                speechPlayer?.play(it)
+                speechPlayer?.play(SpeechState.Play(Announcement("Test hybrid speech player.", null, null)))
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.mapbox.navigation.ui.voice.api
 
 import android.content.Context
+import android.util.Log
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
@@ -40,7 +41,8 @@ class MapboxHybridSpeechPlayer(
         ThreadController.getMainScopeAndRootJob().scope.monitorChannelWithException(
             onDoneReceiveChannel,
             {
-                queue.poll()
+                val current = queue.poll()
+                Log.d("DEBUG", "DEBUG Hybrid poll ${current.javaClass.name}@${Integer.toHexString(current.hashCode())}")
                 play()
             }
         )
@@ -54,6 +56,7 @@ class MapboxHybridSpeechPlayer(
      */
     override fun play(state: SpeechState.Play) {
         queue.add(state)
+        Log.d("DEBUG", "DEBUG Hybrid add ${state.javaClass.name}@${Integer.toHexString(state.hashCode())}")
         if (queue.size == 1) {
             play()
         }

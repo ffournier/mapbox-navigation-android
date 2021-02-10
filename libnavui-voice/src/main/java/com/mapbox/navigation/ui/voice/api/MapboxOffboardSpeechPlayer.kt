@@ -2,6 +2,7 @@ package com.mapbox.navigation.ui.voice.api
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.util.Log
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
@@ -28,7 +29,7 @@ class MapboxOffboardSpeechPlayer(
 
     private var mediaPlayer: MediaPlayer? = null
     private var volumeLevel: Float = DEFAULT_VOLUME_LEVEL
-    private var queue: Queue<File> = ConcurrentLinkedQueue()
+    private var queue: Queue<SpeechState.Play> = ConcurrentLinkedQueue()
     private var donePlayingChannel: Channel<SpeechState.Done>? = null
 
     /**
@@ -41,7 +42,8 @@ class MapboxOffboardSpeechPlayer(
     override fun play(state: SpeechState.Play) {
         val file = state.announcement.file
         if (file != null && file.canRead()) {
-            queue.add(file)
+            queue.add(state)
+            Log.d("DEBUG", "DEBUG Offboard add ${state.javaClass.name}@${Integer.toHexString(state.hashCode())}")
         }
         if (queue.size == 1) {
             play()
@@ -81,7 +83,7 @@ class MapboxOffboardSpeechPlayer(
 
     private fun play() {
         if (queue.isNotEmpty()) {
-            setupMediaPlayer(queue.peek())
+            setupMediaPlayer(queue.peek().announcement.file!!)
         }
     }
 
@@ -115,7 +117,8 @@ class MapboxOffboardSpeechPlayer(
 
     private fun playNext(mp: MediaPlayer?) {
         resetMediaPlayer(mp)
-        queue.poll()
+        val current = queue.poll()
+        Log.d("DEBUG", "DEBUG Offboard poll ${current.javaClass.name}@${Integer.toHexString(current.hashCode())}")
         donePlayingChannel?.offer(SpeechState.Done)
         play()
     }
