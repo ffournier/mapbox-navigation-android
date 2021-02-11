@@ -4,11 +4,10 @@ import android.content.Context
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
-import android.util.Log
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
+import com.mapbox.navigation.ui.base.api.voice.SpeechPlayerCallback
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
-import kotlinx.coroutines.channels.Channel
 import java.util.Locale
 
 /**
@@ -16,7 +15,7 @@ import java.util.Locale
  * @property context Context
  * @property language String
  */
-class MapboxOnboardSpeechPlayer(
+internal class MapboxOnboardSpeechPlayer(
     private val context: Context,
     private val language: String
 ) : SpeechPlayer {
@@ -30,7 +29,8 @@ class MapboxOnboardSpeechPlayer(
         initializeWithLanguage(Locale(language))
     }
     private var volumeLevel: Float = DEFAULT_VOLUME_LEVEL
-    private var donePlayingChannel: Channel<SpeechState.Done>? = null
+    private lateinit var clientCallback: SpeechPlayerCallback
+    private var currentPlay: SpeechState.Play = SpeechState.Play(Announcement("", null, null))
 
     /**
      * Given [SpeechState.Play] [Announcement] the method will play the voice instruction.
@@ -38,14 +38,13 @@ class MapboxOnboardSpeechPlayer(
      * the given voice instruction will be queued to play after.
      * @param state SpeechState Play Announcement object including the announcement text
      * and optionally a synthesized speech mp3.
+     * @param callback
      */
-    override fun play(state: SpeechState.Play) {
+    override fun play(state: SpeechState.Play, callback: SpeechPlayerCallback) {
+        clientCallback = callback
+        currentPlay = state
         if (isLanguageSupported) {
-            Log.d(
-                "DEBUG",
-                "DEBUG Onboard add ${state.javaClass.name}@${Integer.toHexString(state.hashCode())}"
-            )
-            play(state.announcement)
+            play(state.announcement.announcement)
         }
     }
 
@@ -80,10 +79,6 @@ class MapboxOnboardSpeechPlayer(
         volumeLevel = DEFAULT_VOLUME_LEVEL
     }
 
-    internal fun setDonePlayingChannel(channel: Channel<SpeechState.Done>) {
-        this.donePlayingChannel = channel
-    }
-
     private fun initializeWithLanguage(language: Locale) {
         val isLanguageAvailable =
             textToSpeech.isLanguageAvailable(language) == TextToSpeech.LANG_AVAILABLE
@@ -94,11 +89,11 @@ class MapboxOnboardSpeechPlayer(
         textToSpeech.language = language
         textToSpeech.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onDone(utteranceId: String?) {
-                playNext()
+                donePlaying()
             }
 
             override fun onError(utteranceId: String?) {
-                playNext()
+                donePlaying()
             }
 
             override fun onStart(utteranceId: String?) {
@@ -106,20 +101,20 @@ class MapboxOnboardSpeechPlayer(
             }
 
             override fun onStop(utteranceId: String?, interrupted: Boolean) {
-                playNext()
+                donePlaying()
             }
         })
     }
 
-    private fun playNext() {
-        donePlayingChannel?.offer(SpeechState.Done)
+    private fun donePlaying() {
+        clientCallback.onDone(SpeechState.Done(currentPlay.announcement))
     }
 
-    private fun play(announcement: Announcement) {
+    private fun play(announcement: String) {
         val bundle = Bundle()
         bundle.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volumeLevel)
         textToSpeech.speak(
-            announcement.announcement,
+            announcement,
             TextToSpeech.QUEUE_FLUSH,
             bundle,
             DEFAULT_UTTERANCE_ID

@@ -17,4 +17,16 @@ interface SpeechApi {
         voiceInstruction: VoiceInstructions,
         callback: SpeechCallback
     )
+
+    /**
+     * Given the [Announcement] the method may cleanup any associated files previously generated.
+     * @param announcement
+     */
+    fun clean(announcement: Announcement)
+
+    /**
+     * The method stops the process of retrieving the voice instruction [Announcement]
+     * and destroys any related callbacks.
+     */
+    fun cancel()
 }

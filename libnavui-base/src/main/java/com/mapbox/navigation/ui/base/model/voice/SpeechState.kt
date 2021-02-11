@@ -34,8 +34,9 @@ sealed class SpeechState : MapboxState {
 
     /**
      * The state is returned if the voice instruction is done playing.
+     * @property announcement
      */
-    object Done : SpeechState()
+    data class Done(val announcement: Announcement) : SpeechState()
 
     /**
      * The state is returned if we change the speech volume.

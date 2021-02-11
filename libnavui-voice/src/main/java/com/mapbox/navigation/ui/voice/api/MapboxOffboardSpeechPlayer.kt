@@ -2,17 +2,14 @@ package com.mapbox.navigation.ui.voice.api
 
 import android.content.Context
 import android.media.MediaPlayer
-import android.util.Log
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
+import com.mapbox.navigation.ui.base.api.voice.SpeechPlayerCallback
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
-import kotlinx.coroutines.channels.Channel
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.util.Queue
-import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Online implementation of [SpeechPlayer].
@@ -21,7 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * @property accessToken String
  * @property language String
  */
-class MapboxOffboardSpeechPlayer(
+internal class MapboxOffboardSpeechPlayer(
     private val context: Context,
     private val accessToken: String,
     private val language: String
@@ -29,8 +26,8 @@ class MapboxOffboardSpeechPlayer(
 
     private var mediaPlayer: MediaPlayer? = null
     private var volumeLevel: Float = DEFAULT_VOLUME_LEVEL
-    private var queue: Queue<SpeechState.Play> = ConcurrentLinkedQueue()
-    private var donePlayingChannel: Channel<SpeechState.Done>? = null
+    private lateinit var clientCallback: SpeechPlayerCallback
+    private var currentPlay: SpeechState.Play = SpeechState.Play(Announcement("", null, null))
 
     /**
      * Given [SpeechState.Play] [Announcement] the method will play the voice instruction.
@@ -38,15 +35,14 @@ class MapboxOffboardSpeechPlayer(
      * the given voice instruction will be queued to play after.
      * @param state SpeechState Play Announcement object including the announcement text
      * and optionally a synthesized speech mp3.
+     * @param callback
      */
-    override fun play(state: SpeechState.Play) {
+    override fun play(state: SpeechState.Play, callback: SpeechPlayerCallback) {
+        clientCallback = callback
+        currentPlay = state
         val file = state.announcement.file
         if (file != null && file.canRead()) {
-            queue.add(state)
-            Log.d("DEBUG", "DEBUG Offboard add ${state.javaClass.name}@${Integer.toHexString(state.hashCode())}")
-        }
-        if (queue.size == 1) {
-            play()
+            play(file)
         }
     }
 
@@ -63,7 +59,6 @@ class MapboxOffboardSpeechPlayer(
      * Clears any announcements queued.
      */
     override fun clear() {
-        queue.clear()
         resetMediaPlayer(mediaPlayer)
     }
 
@@ -77,17 +72,7 @@ class MapboxOffboardSpeechPlayer(
         volumeLevel = DEFAULT_VOLUME_LEVEL
     }
 
-    internal fun setDonePlayingChannel(channel: Channel<SpeechState.Done>) {
-        this.donePlayingChannel = channel
-    }
-
-    private fun play() {
-        if (queue.isNotEmpty()) {
-            setupMediaPlayer(queue.peek().announcement.file!!)
-        }
-    }
-
-    private fun setupMediaPlayer(instruction: File) {
+    private fun play(instruction: File) {
         try {
             FileInputStream(instruction).use { fis ->
                 mediaPlayer = MediaPlayer()
@@ -97,9 +82,9 @@ class MapboxOffboardSpeechPlayer(
                 addListeners()
             }
         } catch (ex: FileNotFoundException) {
-            playNext(mediaPlayer)
+            donePlaying(mediaPlayer)
         } catch (ex: IOException) {
-            playNext(mediaPlayer)
+            donePlaying(mediaPlayer)
         }
     }
 
@@ -111,16 +96,13 @@ class MapboxOffboardSpeechPlayer(
             mp.start()
         }
         mediaPlayer?.setOnCompletionListener { mp ->
-            playNext(mp)
+            donePlaying(mp)
         }
     }
 
-    private fun playNext(mp: MediaPlayer?) {
+    private fun donePlaying(mp: MediaPlayer?) {
         resetMediaPlayer(mp)
-        val current = queue.poll()
-        Log.d("DEBUG", "DEBUG Offboard poll ${current.javaClass.name}@${Integer.toHexString(current.hashCode())}")
-        donePlayingChannel?.offer(SpeechState.Done)
-        play()
+        clientCallback.onDone(SpeechState.Done(currentPlay.announcement))
     }
 
     private fun setVolume(level: Float) {

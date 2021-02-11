@@ -2,6 +2,7 @@ package com.mapbox.navigation.ui.voice.api
 
 import android.content.Context
 import com.mapbox.api.directions.v5.models.VoiceInstructions
+import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.voice.VoiceAction
 import com.mapbox.navigation.ui.voice.VoiceProcessor
 import com.mapbox.navigation.ui.voice.VoiceResult
@@ -76,6 +77,16 @@ internal class MapboxVoiceApi(
         }
     }
 
+    /**
+     * Given the [Announcement] the method may cleanup any associated files previously generated.
+     * @param announcement
+     */
+    override fun clean(announcement: Announcement) {
+        announcement.file?.let {
+            delete(it)
+        }
+    }
+
     private suspend fun generateVoiceFileFrom(data: ResponseBody): File =
         withContext(ThreadController.IODispatcher) {
             val cacheDirectory = context.applicationContext.cacheDir
@@ -86,6 +97,12 @@ internal class MapboxVoiceApi(
         }
 
     private fun retrieveUniqueId(): String = (++uniqueId).toString()
+
+    private fun delete(file: File) {
+        ThreadController.getIOScopeAndRootJob().scope.launch {
+            file.delete()
+        }
+    }
 
     private companion object {
         private const val MAPBOX_INSTRUCTIONS_CACHE = "mapbox_instructions_cache"

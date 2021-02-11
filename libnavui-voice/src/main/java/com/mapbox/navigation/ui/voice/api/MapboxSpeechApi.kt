@@ -61,4 +61,20 @@ class MapboxSpeechApi(
             }
         )
     }
+
+    /**
+     * Given the [Announcement] the method may cleanup any associated files previously generated.
+     * @param announcement
+     */
+    override fun clean(announcement: Announcement) {
+        voiceAPI.clean(announcement)
+    }
+
+    /**
+     * The method stops the process of retrieving the voice instruction [Announcement]
+     * and destroys any related callbacks.
+     */
+    override fun cancel() {
+        TODO("Not yet implemented")
+    }
 }

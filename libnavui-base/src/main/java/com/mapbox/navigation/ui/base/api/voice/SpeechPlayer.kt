@@ -14,8 +14,9 @@ interface SpeechPlayer {
      * the given voice instruction will be queued to play after.
      * @param state SpeechState Play Announcement object including the announcement text
      * and optionally a synthesized speech mp3.
+     * @param callback
      */
-    fun play(state: SpeechState.Play)
+    fun play(state: SpeechState.Play, callback: SpeechPlayerCallback)
 
     /**
      * The method will set the volume to the specified level from [SpeechState.Volume].

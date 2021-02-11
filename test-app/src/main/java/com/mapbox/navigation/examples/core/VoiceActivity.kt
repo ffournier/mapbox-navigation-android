@@ -47,6 +47,7 @@ import com.mapbox.navigation.core.trip.session.VoiceInstructionsObserver
 import com.mapbox.navigation.ui.base.api.voice.SpeechApi
 import com.mapbox.navigation.ui.base.api.voice.SpeechCallback
 import com.mapbox.navigation.ui.base.api.voice.SpeechPlayer
+import com.mapbox.navigation.ui.base.api.voice.SpeechPlayerCallback
 import com.mapbox.navigation.ui.base.model.voice.Announcement
 import com.mapbox.navigation.ui.base.model.voice.SpeechState
 import com.mapbox.navigation.ui.maps.camera.NavigationCamera
@@ -133,20 +134,27 @@ class VoiceActivity :
         }
     }
 
+    private val speechPlayerCallback: SpeechPlayerCallback = object : SpeechPlayerCallback {
+        override fun onDone(state: SpeechState.Done) {
+            speechAPI.clean(state.announcement)
+        }
+    }
+
     private val speechCallback = object : SpeechCallback {
         override fun onAvailable(state: SpeechState.Speech.Available) {
             val currentPlay = SpeechState.Play(state.announcement)
             if (isFirst) {
-                firstPlay = SpeechState.Play(
-                    Announcement("Marina is awesome", null, null)
-                )
+                firstPlay = currentPlay
                 isFirst = false
             }
-            speechPlayer?.play(currentPlay)
+            speechPlayer?.play(currentPlay, speechPlayerCallback)
         }
 
         override fun onError(error: SpeechState.Speech.Error) {
-            TODO("Not yet implemented")
+            Log.e(
+                "VoiceActivity",
+                "Error playing the voice instruction: ${error.exception}"
+            )
         }
     }
 
@@ -378,7 +386,10 @@ class VoiceActivity :
 
         add_play.setOnClickListener {
             firstPlay?.let {
-                speechPlayer?.play(SpeechState.Play(Announcement("Test hybrid speech player.", null, null)))
+                speechPlayer?.play(
+                    SpeechState.Play(Announcement("Test hybrid speech player.", null, null)),
+                    speechPlayerCallback
+                )
             }
         }
     }
